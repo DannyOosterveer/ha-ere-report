@@ -50,6 +50,7 @@ from .const import (
     CONF_MID_CONFIRMED,
     CONF_MIN_SESSION_KWH,
     CONF_POSTCODE_CITY,
+    CONF_REPORT_LANGUAGE,
     DEFAULT_IDLE_MINUTES,
     DEFAULT_MIN_SESSION_KWH,
     DOMAIN,
@@ -60,6 +61,7 @@ from .const import (
 )
 from .history import HourRow, previous_quarter, quarter_bounds, quarter_of
 from .report import ReportData, ReportMeta, build_report, write_csv, write_xlsx
+from .report_text import DEFAULT_LANGUAGE
 from .session_tracker import Session, SessionTracker
 
 _LOGGER = logging.getLogger(__name__)
@@ -296,6 +298,7 @@ class EreReportManager:
             recorded,
             self.tracking_since,
             self.min_kwh,
+            self.entry.options.get(CONF_REPORT_LANGUAGE, DEFAULT_LANGUAGE),
         )
 
     async def async_generate(self, year: int, quarter: int) -> dict[str, Any]:
@@ -338,15 +341,26 @@ class EreReportManager:
             )
             for suffix in ("xlsx", "csv")
         }
-        persistent_notification.async_create(
-            self.hass,
-            (
+        if self.hass.config.language.startswith("nl"):
+            message = (
                 f"**{self.entry.title} — Q{quarter} {year}**: "
                 f"{data.meter_total:.2f} kWh, {len(data.sessions)} sessies.\n\n"
                 f"[Download xlsx]({links['xlsx']}) · [Download csv]({links['csv']})\n\n"
                 f"De bestanden staan in `{folder}`."
-            ),
-            title="ERE-laadrapport",
+            )
+            title = "ERE-laadrapport"
+        else:
+            message = (
+                f"**{self.entry.title} — Q{quarter} {year}**: "
+                f"{data.meter_total:.2f} kWh, {len(data.sessions)} sessions.\n\n"
+                f"[Download xlsx]({links['xlsx']}) · [Download csv]({links['csv']})\n\n"
+                f"The files are stored in `{folder}`."
+            )
+            title = "ERE charging report"
+        persistent_notification.async_create(
+            self.hass,
+            message,
+            title=title,
             notification_id=f"{DOMAIN}_{self.entry.entry_id}_{year}q{quarter}",
         )
         self.hass.bus.async_fire(EVENT_REPORT_GENERATED, result)

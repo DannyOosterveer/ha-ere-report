@@ -18,6 +18,7 @@ CONF_CHARGER_SERIAL = "charger_serial"
 CONF_MID_CONFIRMED = "mid_confirmed"
 CONF_IDLE_MINUTES = "idle_minutes"
 CONF_MIN_SESSION_KWH = "min_session_kwh"
+CONF_REPORT_LANGUAGE = "report_language"
 
 DEFAULT_IDLE_MINUTES = 15
 DEFAULT_MIN_SESSION_KWH = 0.05

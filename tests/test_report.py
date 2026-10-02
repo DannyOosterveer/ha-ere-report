@@ -184,3 +184,28 @@ def test_write_files(tmp_path: Path) -> None:
     assert lines[0]["start"] == "2026-07-01T09:00:00+02:00"
     assert lines[0]["kwh"] == "10.00"
     assert lines[0]["ean"] == "871234567890123456"
+
+
+def test_english_report(tmp_path: Path) -> None:
+    rows = quarter_rows({10: 6.0})[:300]
+    now = rows[-1].start + timedelta(hours=1)
+    meta = ReportMeta(charger_name="Charger", energy_entity="sensor.meter")
+    data = build_report(meta, 2026, 3, TZ, now, rows, [], None, 0.05, language="en")
+    assert data.notes[0].startswith("Provisional report")
+    assert any("built-in MID meter" in note for note in data.notes)
+    assert any("reconstructed" in note for note in data.notes)
+
+    xlsx = tmp_path / "report.xlsx"
+    write_xlsx(data, xlsx, TZ, "0.1.0")
+    write_csv(data, xlsx.with_suffix(".csv"), TZ)
+    workbook = load_workbook(xlsx)
+    assert workbook.sheetnames == ["Summary", "Sessions", "Monthly totals"]
+    summary = list(workbook["Summary"].iter_rows(values_only=True))
+    assert summary[0][0] == "ERE charging report — Q3 2026"
+    assert summary[1][0].startswith("1 July 2026 to 30 September 2026")
+    sessions = list(workbook["Sessions"].iter_rows(values_only=True))
+    assert sessions[0][1] == "Day"
+    assert sessions[1][1] == "Wed"
+    assert sessions[1][8] == "reconstructed from hourly values"
+    with xlsx.with_suffix(".csv").open(encoding="utf-8") as handle:
+        assert handle.readline().startswith("charge_point,serial_number,ean,")

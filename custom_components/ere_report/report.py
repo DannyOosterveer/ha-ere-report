@@ -1,7 +1,7 @@
 """Build the quarterly report and write it as xlsx and csv.
 
-Pure Python plus openpyxl: no Home Assistant imports. The report itself is
-in Dutch because the ERE scheme is Dutch.
+Pure Python plus openpyxl: no Home Assistant imports. The report is written
+in Dutch by default (the ERE scheme is Dutch) or in English.
 """
 
 from __future__ import annotations
@@ -18,43 +18,15 @@ from .history import (
     quarter_bounds,
     reconstruct_sessions,
 )
+from .report_text import DEFAULT_LANGUAGE, texts
 from .session_tracker import (
-    FLAG_INTERRUPTED,
-    FLAG_METER_RESET,
     FLAG_ONGOING,
     FLAG_SPLIT,
-    SOURCE_LIVE,
     SOURCE_RECONSTRUCTED,
     SOURCE_UNOBSERVED,
     Session,
 )
 
-DAYS = ["ma", "di", "wo", "do", "vr", "za", "zo"]
-MONTHS = [
-    "januari",
-    "februari",
-    "maart",
-    "april",
-    "mei",
-    "juni",
-    "juli",
-    "augustus",
-    "september",
-    "oktober",
-    "november",
-    "december",
-]
-SOURCE_LABELS = {
-    SOURCE_LIVE: "live gemeten",
-    SOURCE_UNOBSERVED: "niet live waargenomen",
-    SOURCE_RECONSTRUCTED: "gereconstrueerd uit uurwaarden",
-}
-FLAG_LABELS = {
-    FLAG_INTERRUPTED: "meting kort onderbroken",
-    FLAG_METER_RESET: "afgesloten door tellerreset",
-    FLAG_SPLIT: "gesplitst op kwartaalgrens",
-    FLAG_ONGOING: "liep nog bij aanmaken rapport",
-}
 DT_FORMAT = "DD-MM-YYYY HH:MM"
 
 
@@ -90,6 +62,7 @@ class ReportData:
     meter_total: float
     sessions: list[Session]
     month_meter_kwh: dict[int, float]
+    language: str = DEFAULT_LANGUAGE
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -152,6 +125,7 @@ def build_report(
     recorded_sessions: list[Session],
     tracking_since: datetime | None,
     min_kwh: float,
+    language: str = DEFAULT_LANGUAGE,
 ) -> ReportData:
     """Combine statistics and recorded sessions into a report.
 
@@ -203,6 +177,7 @@ def build_report(
         meter_total=meter_total,
         sessions=sessions,
         month_meter_kwh=month_meter_kwh,
+        language=language,
     )
     data.notes = _notes(data, period, now, tz)
     return data
@@ -211,76 +186,65 @@ def build_report(
 def _notes(
     data: ReportData, period: list[HourRow], now: datetime, tz: tzinfo
 ) -> list[str]:
+    t = texts(data.language)
     notes = []
     if not data.complete:
-        notes.append(
-            "Voorlopig rapport: het kwartaal was nog niet afgelopen bij het aanmaken."
-        )
+        notes.append(t["note_incomplete"])
     if not data.meta.mid_confirmed:
-        notes.append(
-            "De gebruiker heeft niet bevestigd dat de meetbron de geïntegreerde "
-            "MID-meter van het laadpunt is."
-        )
+        notes.append(t["note_mid"])
     if not period:
-        notes.append("Geen meetgegevens gevonden voor deze periode.")
+        notes.append(t["note_no_data"])
         return notes
 
     # Subtract in UTC: local wall-clock arithmetic ignores DST changes.
     period_end = min(data.end, now).astimezone(UTC)
     expected = int((period_end - data.start.astimezone(UTC)) / HOUR)
     if (missing := expected - len(period)) > 0:
-        notes.append(
-            f"{missing} van de {expected} uren in de periode hebben geen meetgegevens."
-        )
+        notes.append(t["note_missing"].format(missing=missing, expected=expected))
     if negative := [r for r in period if r.change < 0]:
-        notes.append(f"{len(negative)} uren met een dalende meterstand (tellerreset?).")
+        notes.append(t["note_negative"].format(count=len(negative)))
     for row in period:
         if row.change > SUSPECT_KWH_PER_HOUR:
             when = row.start.astimezone(tz).strftime("%d-%m-%Y %H:%M")
-            notes.append(
-                f"Onwaarschijnlijk hoge uurwaarde van {row.change:.1f} kWh op {when}; "
-                "mogelijk verbruik uit eerdere uren zonder meetgegevens."
-            )
+            notes.append(t["note_spike"].format(kwh=row.change, when=when))
     if data.meter_begin is not None and data.meter_end is not None:
         by_readings = round(data.meter_end - data.meter_begin, 2)
         if abs(by_readings - data.meter_total) > 0.02:
             notes.append(
-                f"Eindstand min beginstand ({by_readings:.2f} kWh) wijkt af van de som "
-                f"van de uurwaarden ({data.meter_total:.2f} kWh)."
+                t["note_mismatch"].format(
+                    by_readings=by_readings, total=data.meter_total
+                )
             )
     counts = {
         source: sum(1 for s in data.sessions if s.source == source)
         for source in (SOURCE_RECONSTRUCTED, SOURCE_UNOBSERVED)
     }
     if counts[SOURCE_RECONSTRUCTED]:
-        notes.append(
-            f"{counts[SOURCE_RECONSTRUCTED]} sessies zijn achteraf gereconstrueerd uit "
-            "uurwaarden; begin- en eindtijden zijn afgerond op hele uren."
-        )
+        notes.append(t["note_reconstructed"].format(count=counts[SOURCE_RECONSTRUCTED]))
     if counts[SOURCE_UNOBSERVED]:
-        notes.append(
-            f"{counts[SOURCE_UNOBSERVED]} sessies zijn niet live waargenomen "
-            "(Home Assistant of de sensor was niet beschikbaar); de starttijd is "
-            "het laatste moment waarop de meter nog werd gevolgd."
-        )
+        notes.append(t["note_unobserved"].format(count=counts[SOURCE_UNOBSERVED]))
     return notes
 
 
-def _yes_no(value: bool) -> str:
-    return "ja" if value else "nee"
-
-
 def _period_label(data: ReportData, tz: tzinfo) -> str:
+    t = texts(data.language)
+    months = t["months"]
     last_day = (data.end - HOUR).astimezone(tz)
     first_day = data.start.astimezone(tz)
     return (
-        f"{first_day.day} {MONTHS[first_day.month - 1]} {first_day.year} t/m "
-        f"{last_day.day} {MONTHS[last_day.month - 1]} {last_day.year} ({tz})"
+        f"{first_day.day} {months[first_day.month - 1]} {first_day.year} "
+        f"{t['period_joiner']} "
+        f"{last_day.day} {months[last_day.month - 1]} {last_day.year} ({tz})"
     )
 
 
-def _remarks(session: Session) -> str:
-    return "; ".join(FLAG_LABELS.get(flag, flag) for flag in session.flags)
+def _source_label(data: ReportData, session: Session) -> str:
+    return texts(data.language)["sources"].get(session.source, session.source)
+
+
+def _remarks(data: ReportData, session: Session) -> str:
+    labels = texts(data.language)["flags"]
+    return "; ".join(labels.get(flag, flag) for flag in session.flags)
 
 
 def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
@@ -298,48 +262,46 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
             cell.font = bold
             cell.fill = header_fill
 
+    t = texts(data.language)
     wb = Workbook()
     ws = wb.active
-    ws.title = "Samenvatting"
+    ws.title = t["sheet_summary"]
     meta = data.meta
-    ws.append([f"ERE-laadrapport — Q{data.quarter} {data.year}"])
+    ws.append([t["title"].format(quarter=data.quarter, year=data.year)])
     ws["A1"].font = title_font
     ws.append([_period_label(data, tz)])
     ws.append([])
 
     sections: list[tuple[str, list[tuple[str, object]]]] = [
         (
-            "Aanvrager",
+            t["section_applicant"],
             [
-                ("Naam", meta.holder_name),
-                ("Adres laadlocatie", meta.address),
-                ("Postcode en plaats", meta.postcode_city),
-                ("EAN-code aansluiting", meta.ean),
+                (t["name"], meta.holder_name),
+                (t["address"], meta.address),
+                (t["postcode_city"], meta.postcode_city),
+                (t["ean"], meta.ean),
             ],
         ),
         (
-            "Laadpunt",
+            t["section_charger"],
             [
-                ("Naam", meta.charger_name),
-                ("Merk", meta.charger_brand),
-                ("Type", meta.charger_model),
-                ("Serienummer", meta.charger_serial),
-                (
-                    "Geïntegreerde MID-meter (verklaring gebruiker)",
-                    _yes_no(meta.mid_confirmed),
-                ),
-                ("Meetbron in Home Assistant", meta.energy_entity),
+                (t["name"], meta.charger_name),
+                (t["brand"], meta.charger_brand),
+                (t["model"], meta.charger_model),
+                (t["serial"], meta.charger_serial),
+                (t["mid"], t["yes"] if meta.mid_confirmed else t["no"]),
+                (t["source_entity"], meta.energy_entity),
             ],
         ),
         (
-            "Meetgegevens",
+            t["section_readings"],
             [
-                ("Meterstand begin periode (kWh)", data.meter_begin),
-                ("Meterstand eind periode (kWh)", data.meter_end),
-                ("Geleverd in periode (kWh)", data.meter_total),
-                ("Aantal laadsessies", len(data.sessions)),
-                ("Som laadsessies (kWh)", data.sessions_total),
-                ("Niet aan een sessie toegewezen (kWh)", data.unallocated),
+                (t["meter_begin"], data.meter_begin),
+                (t["meter_end"], data.meter_end),
+                (t["delivered"], data.meter_total),
+                (t["session_count"], len(data.sessions)),
+                (t["sessions_total"], data.sessions_total),
+                (t["unallocated"], data.unallocated),
             ],
         ),
     ]
@@ -352,57 +314,40 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
             ws.append([label, value])
             cell = ws.cell(row=ws.max_row, column=2)
             cell.alignment = Alignment(horizontal="left")
-            if label == "Geleverd in periode (kWh)":
+            if label == t["delivered"]:
                 ws.cell(row=ws.max_row, column=1).font = bold
                 cell.font = bold
             if isinstance(value, float):
                 cell.number_format = "0.00"
         ws.append([])
     if data.notes:
-        ws.append(["Opmerkingen"])
+        ws.append([t["section_notes"]])
         ws.cell(row=ws.max_row, column=1).font = bold
         for note in data.notes:
             ws.append([note])
         ws.append([])
     generated = data.generated.astimezone(tz).strftime("%d-%m-%Y %H:%M")
-    ws.append(
-        [f"Aangemaakt op {generated} door Home Assistant (ERE-laadrapport {version})."]
-    )
+    ws.append([t["footer"].format(generated=generated, version=version)])
     ws.column_dimensions["A"].width = 48
     ws.column_dimensions["B"].width = 36
 
-    ws = wb.create_sheet("Sessies")
-    header(
-        ws,
-        1,
-        [
-            "Nr",
-            "Dag",
-            "Start",
-            "Eind",
-            "Duur (u)",
-            "Meterstand start (kWh)",
-            "Meterstand eind (kWh)",
-            "kWh",
-            "Herkomst",
-            "Opmerking",
-        ],
-    )
+    ws = wb.create_sheet(t["sheet_sessions"])
+    header(ws, 1, t["session_headers"])
     for number, session in enumerate(data.sessions, start=1):
         local_start = session.start.astimezone(tz)
         local_end = session.end.astimezone(tz)
         ws.append(
             [
                 number,
-                DAYS[local_start.weekday()],
+                t["days"][local_start.weekday()],
                 local_start.replace(tzinfo=None),
                 local_end.replace(tzinfo=None),
                 round((session.end - session.start) / HOUR, 2),
                 session.meter_start,
                 session.meter_end,
                 round(session.kwh, 2),
-                SOURCE_LABELS.get(session.source, session.source),
-                _remarks(session),
+                _source_label(data, session),
+                _remarks(data, session),
             ]
         )
         row = ws.max_row
@@ -413,7 +358,7 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
         for col in (6, 7):
             ws.cell(row=row, column=col).number_format = "0.000"
     ws.append([])
-    ws.append(["Totaal", None, None, None, None, None, None, data.sessions_total])
+    ws.append([t["total"], None, None, None, None, None, None, data.sessions_total])
     ws.cell(row=ws.max_row, column=1).font = bold
     ws.cell(row=ws.max_row, column=8).font = bold
     ws.cell(row=ws.max_row, column=8).number_format = "0.00"
@@ -423,20 +368,20 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
         ws.column_dimensions[column].width = width
     ws.freeze_panes = "A2"
 
-    ws = wb.create_sheet("Maandtotalen")
-    header(ws, 1, ["Maand", "Aantal sessies", "kWh sessies", "kWh meter"])
+    ws = wb.create_sheet(t["sheet_months"])
+    header(ws, 1, t["month_headers"])
     for month in data.months:
         in_month = [s for s in data.sessions if s.start.astimezone(tz).month == month]
         ws.append(
             [
-                MONTHS[month - 1],
+                t["months"][month - 1],
                 len(in_month),
                 round(sum(s.kwh for s in in_month), 2),
                 round(data.month_meter_kwh.get(month, 0.0), 2),
             ]
         )
     ws.append([])
-    ws.append(["Totaal", len(data.sessions), data.sessions_total, data.meter_total])
+    ws.append([t["total"], len(data.sessions), data.sessions_total, data.meter_total])
     for col in range(1, 5):
         ws.cell(row=ws.max_row, column=col).font = bold
     for row in ws.iter_rows(min_row=2, min_col=3, max_col=4):
@@ -449,26 +394,12 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
     wb.save(path)
 
 
-CSV_COLUMNS = [
-    "laadpunt",
-    "serienummer",
-    "ean",
-    "start",
-    "eind",
-    "meterstand_start_kwh",
-    "meterstand_eind_kwh",
-    "kwh",
-    "herkomst",
-    "opmerking",
-]
-
-
 def write_csv(data: ReportData, path: Path, tz: tzinfo) -> None:
     """Write one line per session, with ISO 8601 timestamps."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow(CSV_COLUMNS)
+        writer.writerow(texts(data.language)["csv_columns"])
         for session in data.sessions:
             writer.writerow(
                 [
@@ -480,7 +411,7 @@ def write_csv(data: ReportData, path: Path, tz: tzinfo) -> None:
                     "" if session.meter_start is None else f"{session.meter_start:.3f}",
                     "" if session.meter_end is None else f"{session.meter_end:.3f}",
                     f"{session.kwh:.2f}",
-                    SOURCE_LABELS.get(session.source, session.source),
-                    _remarks(session),
+                    _source_label(data, session),
+                    _remarks(data, session),
                 ]
             )

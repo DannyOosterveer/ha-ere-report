@@ -32,10 +32,12 @@ from .const import (
     CONF_MID_CONFIRMED,
     CONF_MIN_SESSION_KWH,
     CONF_POSTCODE_CITY,
+    CONF_REPORT_LANGUAGE,
     DEFAULT_IDLE_MINUTES,
     DEFAULT_MIN_SESSION_KWH,
     DOMAIN,
 )
+from .report_text import DEFAULT_LANGUAGE, LANGUAGES
 
 TEXT_FIELDS = (
     CONF_HOLDER_NAME,
@@ -132,6 +134,18 @@ def _details_schema(defaults: dict[str, Any], with_tuning: bool) -> vol.Schema:
             CONF_MID_CONFIRMED, default=defaults.get(CONF_MID_CONFIRMED, False)
         )
     ] = selector.BooleanSelector()
+    schema[
+        vol.Required(
+            CONF_REPORT_LANGUAGE,
+            default=defaults.get(CONF_REPORT_LANGUAGE, DEFAULT_LANGUAGE),
+        )
+    ] = selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=list(LANGUAGES),
+            translation_key=CONF_REPORT_LANGUAGE,
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
     if with_tuning:
         schema[
             vol.Required(

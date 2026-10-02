@@ -21,7 +21,8 @@
           "charger_brand": "Charger brand",
           "charger_model": "Charger model",
           "charger_serial": "Charger serial number",
-          "mid_confirmed": "The sensor is the charger's built-in MID meter"
+          "mid_confirmed": "The sensor is the charger's built-in MID meter",
+          "report_language": "Language of the report"
         }
       }
     },
@@ -47,7 +48,8 @@
           "charger_serial": "Charger serial number",
           "mid_confirmed": "The sensor is the charger's built-in MID meter",
           "idle_minutes": "End a session after this long without consumption",
-          "min_session_kwh": "Smallest session to record"
+          "min_session_kwh": "Smallest session to record",
+          "report_language": "Language of the report"
         }
       }
     },
@@ -104,6 +106,14 @@
     },
     "entry_ambiguous": {
       "message": "More than one charge point is set up; choose one."
+    }
+  },
+  "selector": {
+    "report_language": {
+      "options": {
+        "nl": "Dutch",
+        "en": "English"
+      }
     }
   }
 }

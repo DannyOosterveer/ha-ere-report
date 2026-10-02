@@ -4,8 +4,8 @@ Maakt per kwartaal een rapport van wat je laadpaal heeft geleverd, bedoeld als b
 inboeken van ERE's (emissiereductie-eenheden) via een inboekdienstverlener.
 
 *English summary: a Home Assistant custom integration that records EV charging sessions from any
-cumulative kWh sensor and produces a quarterly xlsx/csv report for the Dutch ERE scheme. The report
-itself is in Dutch.*
+cumulative kWh sensor and produces a quarterly xlsx/csv report for the Dutch ERE scheme. The
+integration is available in Dutch and English; the report language is a setting (Dutch by default).*
 
 ## Lees dit eerst
 
@@ -85,6 +85,8 @@ Via "Configureren" pas je de rapportgegevens aan en stel je de sessiedetectie af
 
 - **Sessie beëindigen na** (standaard 15 minuten zonder verbruik). Zet dit hoger als je auto
   tussendoor lang pauzeert, bijvoorbeeld bij laden op zonnestroom.
+- **Taal van het rapport**: Nederlands (standaard) of Engels. De bediening in Home Assistant volgt
+  de taal van je Home Assistant.
 - **Kleinste sessie** (standaard 0,05 kWh). Kleiner verbruik telt wel mee in het totaal, maar wordt
   geen sessie.
 
