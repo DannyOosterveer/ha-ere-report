@@ -1,0 +1,5 @@
+{
+  "name": "ERE Charging Report",
+  "country": ["NL"],
+  "homeassistant": "2025.1.0"
+}

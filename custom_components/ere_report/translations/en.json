@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Charge point",
+        "description": "Pick the sensor that holds the cumulative kWh meter reading of your charge point. For ERE this must be the MID-certified meter built into the charger. Sensors that look like a charger meter are listed first ({candidates} found); tick the box to choose from all energy sensors.",
+        "data": {
+          "name": "Name of the charge point",
+          "energy_entity": "Meter reading sensor (kWh)",
+          "show_all": "Show all energy sensors"
+        }
+      },
+      "details": {
+        "title": "Report details",
+        "description": "These details are printed on the report. Name, address and EAN should match your energy bill. Everything can be changed later.",
+        "data": {
+          "holder_name": "Name of the applicant",
+          "address": "Address of the charging location",
+          "postcode_city": "Postcode and city",
+          "ean": "EAN code of the grid connection (18 digits)",
+          "charger_brand": "Charger brand",
+          "charger_model": "Charger model",
+          "charger_serial": "Charger serial number",
+          "mid_confirmed": "The sensor is the charger's built-in MID meter"
+        }
+      }
+    },
+    "error": {
+      "invalid_ean": "An EAN code has 18 digits.",
+      "select_entity": "Pick a sensor."
+    },
+    "abort": {
+      "already_configured": "This sensor is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Report details and session detection",
+        "data": {
+          "holder_name": "Name of the applicant",
+          "address": "Address of the charging location",
+          "postcode_city": "Postcode and city",
+          "ean": "EAN code of the grid connection (18 digits)",
+          "charger_brand": "Charger brand",
+          "charger_model": "Charger model",
+          "charger_serial": "Charger serial number",
+          "mid_confirmed": "The sensor is the charger's built-in MID meter",
+          "idle_minutes": "End a session after this long without consumption",
+          "min_session_kwh": "Smallest session to record"
+        }
+      }
+    },
+    "error": {
+      "invalid_ean": "An EAN code has 18 digits."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "quarter_energy": {
+        "name": "Energy this quarter"
+      },
+      "quarter_sessions": {
+        "name": "Sessions this quarter"
+      },
+      "last_session_energy": {
+        "name": "Last session energy"
+      }
+    },
+    "binary_sensor": {
+      "session_active": {
+        "name": "Session active"
+      }
+    },
+    "button": {
+      "generate_previous_quarter": {
+        "name": "Generate report for previous quarter"
+      }
+    }
+  },
+  "services": {
+    "generate_report": {
+      "name": "Generate report",
+      "description": "Creates the quarterly ERE report (xlsx and csv) for a charge point.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Charge point",
+          "description": "Only needed when more than one charge point is set up."
+        },
+        "year": {
+          "name": "Year",
+          "description": "Defaults to the year of the previous quarter."
+        },
+        "quarter": {
+          "name": "Quarter",
+          "description": "Defaults to the previous quarter."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "No loaded charge point found."
+    },
+    "entry_ambiguous": {
+      "message": "More than one charge point is set up; choose one."
+    }
+  }
+}

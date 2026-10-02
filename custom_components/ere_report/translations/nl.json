@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Laadpunt",
+        "description": "Kies de sensor met de oplopende kWh-meterstand van je laadpunt. Voor ERE moet dit de MID-gecertificeerde meter in de laadpaal zelf zijn. Sensoren die op een laadpaalmeter lijken staan vooraan ({candidates} gevonden); vink het hokje aan om uit alle energiesensoren te kiezen.",
+        "data": {
+          "name": "Naam van het laadpunt",
+          "energy_entity": "Sensor met de meterstand (kWh)",
+          "show_all": "Alle energiesensoren tonen"
+        }
+      },
+      "details": {
+        "title": "Gegevens voor het rapport",
+        "description": "Deze gegevens komen op het rapport. Naam, adres en EAN moeten overeenkomen met je energiefactuur. Je kunt alles later nog aanpassen.",
+        "data": {
+          "holder_name": "Naam van de aanvrager",
+          "address": "Adres van de laadlocatie",
+          "postcode_city": "Postcode en plaats",
+          "ean": "EAN-code van de aansluiting (18 cijfers)",
+          "charger_brand": "Merk laadpaal",
+          "charger_model": "Type laadpaal",
+          "charger_serial": "Serienummer laadpaal",
+          "mid_confirmed": "De sensor is de geïntegreerde MID-meter van de laadpaal"
+        }
+      }
+    },
+    "error": {
+      "invalid_ean": "Een EAN-code heeft 18 cijfers.",
+      "select_entity": "Kies een sensor."
+    },
+    "abort": {
+      "already_configured": "Deze sensor is al ingesteld."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Rapportgegevens en sessiedetectie",
+        "data": {
+          "holder_name": "Naam van de aanvrager",
+          "address": "Adres van de laadlocatie",
+          "postcode_city": "Postcode en plaats",
+          "ean": "EAN-code van de aansluiting (18 cijfers)",
+          "charger_brand": "Merk laadpaal",
+          "charger_model": "Type laadpaal",
+          "charger_serial": "Serienummer laadpaal",
+          "mid_confirmed": "De sensor is de geïntegreerde MID-meter van de laadpaal",
+          "idle_minutes": "Sessie beëindigen na zo lang zonder verbruik",
+          "min_session_kwh": "Kleinste sessie die wordt vastgelegd"
+        }
+      }
+    },
+    "error": {
+      "invalid_ean": "Een EAN-code heeft 18 cijfers."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "quarter_energy": {
+        "name": "Energie dit kwartaal"
+      },
+      "quarter_sessions": {
+        "name": "Sessies dit kwartaal"
+      },
+      "last_session_energy": {
+        "name": "Energie laatste sessie"
+      }
+    },
+    "binary_sensor": {
+      "session_active": {
+        "name": "Sessie actief"
+      }
+    },
+    "button": {
+      "generate_previous_quarter": {
+        "name": "Rapport vorig kwartaal maken"
+      }
+    }
+  },
+  "services": {
+    "generate_report": {
+      "name": "Rapport maken",
+      "description": "Maakt het ERE-kwartaalrapport (xlsx en csv) voor een laadpunt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Laadpunt",
+          "description": "Alleen nodig als er meer dan één laadpunt is ingesteld."
+        },
+        "year": {
+          "name": "Jaar",
+          "description": "Standaard het jaar van het vorige kwartaal."
+        },
+        "quarter": {
+          "name": "Kwartaal",
+          "description": "Standaard het vorige kwartaal."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "Geen geladen laadpunt gevonden."
+    },
+    "entry_ambiguous": {
+      "message": "Er zijn meerdere laadpunten ingesteld; kies er één."
+    }
+  }
+}
