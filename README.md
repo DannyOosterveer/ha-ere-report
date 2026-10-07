@@ -114,6 +114,6 @@ Via "Configureren" pas je de rapportgegevens aan en stel je de sessiedetectie af
 ## Ontwikkelen
 
 ```bash
-uv venv --python 3.13 && uv pip install pytest-homeassistant-custom-component openpyxl ruff
+uv venv --python 3.13 && uv pip install pytest-homeassistant-custom-component home-assistant-frontend openpyxl ruff
 .venv/bin/python -m pytest
 ```
