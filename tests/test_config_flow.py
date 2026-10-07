@@ -13,7 +13,6 @@ from custom_components.ere_report.const import (
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
-    CONF_MID_CONFIRMED,
     CONF_MIN_SESSION_KWH,
     DOMAIN,
 )
@@ -32,7 +31,7 @@ async def test_user_flow(recorder_mock, hass: HomeAssistant) -> None:
     assert result["step_id"] == "details"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EAN: "12345", CONF_MID_CONFIRMED: True}
+        result["flow_id"], {CONF_EAN: "12345"}
     )
     assert result["errors"] == {CONF_EAN: "invalid_ean"}
 
@@ -41,7 +40,6 @@ async def test_user_flow(recorder_mock, hass: HomeAssistant) -> None:
         {
             CONF_HOLDER_NAME: " J. Jansen ",
             CONF_EAN: "8712 3456 7890 1234 56",
-            CONF_MID_CONFIRMED: True,
         },
     )
     await hass.async_block_till_done()
@@ -83,7 +81,6 @@ async def test_options_flow(recorder_mock, hass: HomeAssistant) -> None:
         result["flow_id"],
         {
             CONF_HOLDER_NAME: "J. Jansen",
-            CONF_MID_CONFIRMED: True,
             CONF_IDLE_MINUTES: 30,
             CONF_MIN_SESSION_KWH: 0.1,
         },

@@ -21,7 +21,6 @@
           "charger_brand": "Merk laadpaal",
           "charger_model": "Type laadpaal",
           "charger_serial": "Serienummer laadpaal",
-          "mid_confirmed": "De sensor is de geïntegreerde MID-meter van de laadpaal",
           "report_language": "Taal van het rapport"
         }
       }
@@ -46,7 +45,6 @@
           "charger_brand": "Merk laadpaal",
           "charger_model": "Type laadpaal",
           "charger_serial": "Serienummer laadpaal",
-          "mid_confirmed": "De sensor is de geïntegreerde MID-meter van de laadpaal",
           "idle_minutes": "Sessie beëindigen na zo lang zonder verbruik",
           "min_session_kwh": "Kleinste sessie die wordt vastgelegd",
           "report_language": "Taal van het rapport"

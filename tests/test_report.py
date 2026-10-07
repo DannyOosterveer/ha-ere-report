@@ -37,7 +37,6 @@ META = ReportMeta(
     charger_brand="Alfen",
     charger_model="Eve Single Pro-line",
     charger_serial="ACE0001",
-    mid_confirmed=True,
 )
 Q3_START, Q3_END = quarter_bounds(2026, 3, TZ)
 
@@ -141,7 +140,7 @@ def test_notes_for_missing_hours_and_spikes() -> None:
     text = " ".join(data.notes)
     assert "3 van de 2208 uren" in text
     assert "30.0 kWh" in text
-    assert "MID-meter" in text
+    assert "MID" not in text
 
 
 def test_incomplete_quarter_is_marked() -> None:
@@ -171,6 +170,7 @@ def test_write_files(tmp_path: Path) -> None:
     assert summary["Meterstand eind periode (kWh)"] == 1021.0
     assert summary["Geleverd in periode (kWh)"] == 21.0
     assert summary["Aantal laadsessies"] == 2
+    assert not any("MID" in str(label) for label in summary)
     sessions = list(workbook["Sessies"].iter_rows(values_only=True))
     assert sessions[1][2] == datetime(2026, 7, 1, 9, 0)
     assert sessions[1][7] == 10.0
@@ -192,7 +192,6 @@ def test_english_report(tmp_path: Path) -> None:
     meta = ReportMeta(charger_name="Charger", energy_entity="sensor.meter")
     data = build_report(meta, 2026, 3, TZ, now, rows, [], None, 0.05, language="en")
     assert data.notes[0].startswith("Provisional report")
-    assert any("built-in MID meter" in note for note in data.notes)
     assert any("reconstructed" in note for note in data.notes)
 
     xlsx = tmp_path / "report.xlsx"

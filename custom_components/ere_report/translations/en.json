@@ -21,7 +21,6 @@
           "charger_brand": "Charger brand",
           "charger_model": "Charger model",
           "charger_serial": "Charger serial number",
-          "mid_confirmed": "The sensor is the charger's built-in MID meter",
           "report_language": "Language of the report"
         }
       }
@@ -46,7 +45,6 @@
           "charger_brand": "Charger brand",
           "charger_model": "Charger model",
           "charger_serial": "Charger serial number",
-          "mid_confirmed": "The sensor is the charger's built-in MID meter",
           "idle_minutes": "End a session after this long without consumption",
           "min_session_kwh": "Smallest session to record",
           "report_language": "Language of the report"

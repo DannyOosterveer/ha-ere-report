@@ -1,13 +1,21 @@
 {
   "domain": "ere_report",
   "name": "ERE Charging Report",
-  "codeowners": ["@DannyOosterveer"],
+  "codeowners": [
+    "@DannyOosterveer"
+  ],
   "config_flow": true,
-  "dependencies": ["http", "persistent_notification", "recorder"],
+  "dependencies": [
+    "http",
+    "persistent_notification",
+    "recorder"
+  ],
   "documentation": "https://github.com/DannyOosterveer/ha-ere-report",
   "integration_type": "service",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/DannyOosterveer/ha-ere-report/issues",
-  "requirements": ["openpyxl>=3.1.0"],
-  "version": "0.1.0"
+  "requirements": [
+    "openpyxl>=3.1.0"
+  ],
+  "version": "0.1.1"
 }

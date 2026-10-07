@@ -43,7 +43,6 @@ class ReportMeta:
     charger_brand: str = ""
     charger_model: str = ""
     charger_serial: str = ""
-    mid_confirmed: bool = False
 
 
 @dataclass
@@ -190,8 +189,6 @@ def _notes(
     notes = []
     if not data.complete:
         notes.append(t["note_incomplete"])
-    if not data.meta.mid_confirmed:
-        notes.append(t["note_mid"])
     if not period:
         notes.append(t["note_no_data"])
         return notes
@@ -289,7 +286,6 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 (t["brand"], meta.charger_brand),
                 (t["model"], meta.charger_model),
                 (t["serial"], meta.charger_serial),
-                (t["mid"], t["yes"] if meta.mid_confirmed else t["no"]),
                 (t["source_entity"], meta.energy_entity),
             ],
         ),

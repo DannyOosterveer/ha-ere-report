@@ -22,7 +22,6 @@ from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
 from custom_components.ere_report.const import (
     CONF_EAN,
     CONF_ENERGY_ENTITY,
-    CONF_MID_CONFIRMED,
     DOMAIN,
     EVENT_REPORT_GENERATED,
 )
@@ -43,7 +42,7 @@ async def setup_entry(hass: HomeAssistant) -> MockConfigEntry:
         title="Laadpaal",
         unique_id=ENTITY,
         data={CONF_ENERGY_ENTITY: ENTITY},
-        options={CONF_EAN: "871234567890123456", CONF_MID_CONFIRMED: True},
+        options={CONF_EAN: "871234567890123456"},
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)

@@ -12,9 +12,10 @@ integration is available in Dutch and English; the report language is a setting 
 - **Dit is geen koppeling met een inboeker.** Je krijgt een bestand dat je zelf uploadt.
 - **De data komt uit Home Assistant, niet uit de backend van je laadpaal.** Of een inboeker en diens
   verificateur dat accepteren, bepalen zij. Vraag het na voordat je erop rekent.
-- **De integratie kan niet controleren of je sensor de MID-meter is.** Voor particulieren eist de NEa
-  een MID-gecertificeerde meter die in de laadpaal is geïntegreerd. Jij verklaart bij het instellen
-  dat de gekozen sensor die meter uitleest; dat staat zo op het rapport.
+- **Kies de sensor van de MID-meter in je laadpaal.** Voor particulieren eist de NEa een
+  MID-gecertificeerde meter die in de laadpaal is geïntegreerd; zonder die meter kun je geen ERE's
+  aanvragen. De integratie kan niet controleren welke meter een sensor uitleest. Het rapport noemt
+  daarom de gebruikte sensor, zodat je inboeker dat kan nagaan.
 
 ## Wat het doet
 

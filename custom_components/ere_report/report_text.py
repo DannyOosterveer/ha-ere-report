@@ -43,8 +43,6 @@ TEXTS: dict[str, dict[str, object]] = {
             FLAG_SPLIT: "gesplitst op kwartaalgrens",
             FLAG_ONGOING: "liep nog bij aanmaken rapport",
         },
-        "yes": "ja",
-        "no": "nee",
         "period_joiner": "t/m",
         "title": "ERE-laadrapport — Q{quarter} {year}",
         "sheet_summary": "Samenvatting",
@@ -61,7 +59,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "brand": "Merk",
         "model": "Type",
         "serial": "Serienummer",
-        "mid": "Geïntegreerde MID-meter (verklaring gebruiker)",
         "source_entity": "Meetbron in Home Assistant",
         "meter_begin": "Meterstand begin periode (kWh)",
         "meter_end": "Meterstand eind periode (kWh)",
@@ -100,10 +97,6 @@ TEXTS: dict[str, dict[str, object]] = {
         ],
         "note_incomplete": (
             "Voorlopig rapport: het kwartaal was nog niet afgelopen bij het aanmaken."
-        ),
-        "note_mid": (
-            "De gebruiker heeft niet bevestigd dat de meetbron de geïntegreerde "
-            "MID-meter van het laadpunt is."
         ),
         "note_no_data": "Geen meetgegevens gevonden voor deze periode.",
         "note_missing": (
@@ -155,8 +148,6 @@ TEXTS: dict[str, dict[str, object]] = {
             FLAG_SPLIT: "split at quarter boundary",
             FLAG_ONGOING: "still running when the report was made",
         },
-        "yes": "yes",
-        "no": "no",
         "period_joiner": "to",
         "title": "ERE charging report — Q{quarter} {year}",
         "sheet_summary": "Summary",
@@ -173,7 +164,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "brand": "Brand",
         "model": "Model",
         "serial": "Serial number",
-        "mid": "Built-in MID meter (declared by user)",
         "source_entity": "Data source in Home Assistant",
         "meter_begin": "Meter reading at start of period (kWh)",
         "meter_end": "Meter reading at end of period (kWh)",
@@ -212,10 +202,6 @@ TEXTS: dict[str, dict[str, object]] = {
         ],
         "note_incomplete": (
             "Provisional report: the quarter had not ended when it was created."
-        ),
-        "note_mid": (
-            "The user has not confirmed that the data source is the charge point's "
-            "built-in MID meter."
         ),
         "note_no_data": "No meter data found for this period.",
         "note_missing": (

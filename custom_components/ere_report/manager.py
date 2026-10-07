@@ -47,7 +47,6 @@ from .const import (
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
-    CONF_MID_CONFIRMED,
     CONF_MIN_SESSION_KWH,
     CONF_POSTCODE_CITY,
     CONF_REPORT_LANGUAGE,
@@ -276,7 +275,6 @@ class EreReportManager:
             charger_brand=options.get(CONF_CHARGER_BRAND, ""),
             charger_model=options.get(CONF_CHARGER_MODEL, ""),
             charger_serial=options.get(CONF_CHARGER_SERIAL, ""),
-            mid_confirmed=options.get(CONF_MID_CONFIRMED, False),
         )
 
     async def async_build_report(self, year: int, quarter: int) -> ReportData:

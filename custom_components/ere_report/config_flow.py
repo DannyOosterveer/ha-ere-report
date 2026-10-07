@@ -29,7 +29,6 @@ from .const import (
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
-    CONF_MID_CONFIRMED,
     CONF_MIN_SESSION_KWH,
     CONF_POSTCODE_CITY,
     CONF_REPORT_LANGUAGE,
@@ -129,11 +128,6 @@ def _details_schema(defaults: dict[str, Any], with_tuning: bool) -> vol.Schema:
         ): selector.TextSelector()
         for field in TEXT_FIELDS
     }
-    schema[
-        vol.Required(
-            CONF_MID_CONFIRMED, default=defaults.get(CONF_MID_CONFIRMED, False)
-        )
-    ] = selector.BooleanSelector()
     schema[
         vol.Required(
             CONF_REPORT_LANGUAGE,
