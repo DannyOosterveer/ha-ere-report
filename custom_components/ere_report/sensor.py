@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -23,7 +24,7 @@ from .manager import EreReportManager
 
 @dataclass(frozen=True, kw_only=True)
 class EreReportSensorDescription(SensorEntityDescription):
-    value_fn: Callable[[EreReportManager], float | int | None]
+    value_fn: Callable[[EreReportManager], float | int | datetime | None]
     attributes_fn: Callable[[EreReportManager], dict[str, Any] | None] = lambda _: None
 
 
@@ -36,6 +37,23 @@ def _last_session_attributes(manager: EreReportManager) -> dict[str, Any] | None
         "meter_start": session.meter_start,
         "meter_end": session.meter_end,
         "source": session.source,
+    }
+
+
+def _last_report_time(manager: EreReportManager) -> datetime | None:
+    if (report := manager.last_report) is None:
+        return None
+    return datetime.fromisoformat(report["generated"])
+
+
+def _last_report_attributes(manager: EreReportManager) -> dict[str, Any] | None:
+    if (report := manager.last_report) is None:
+        return None
+    return {
+        "period": f"Q{report['quarter']} {report['year']}",
+        "total_kwh": report["total_kwh"],
+        "sessions": report["sessions"],
+        "complete": report["complete"],
     }
 
 
@@ -63,6 +81,12 @@ SENSORS = (
         ),
         attributes_fn=_last_session_attributes,
     ),
+    EreReportSensorDescription(
+        key="last_report",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_last_report_time,
+        attributes_fn=_last_report_attributes,
+    ),
 )
 
 
@@ -88,7 +112,7 @@ class EreReportSensor(EreReportEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> float | int | None:
+    def native_value(self) -> float | int | datetime | None:
         return self.entity_description.value_fn(self.manager)
 
     @property

@@ -26,4 +26,6 @@ class GenerateReportButton(EreReportEntity, ButtonEntity):
     """Generate the report for the previous quarter."""
 
     async def async_press(self) -> None:
-        await self.manager.async_generate(*previous_quarter(dt_util.now().date()))
+        await self.manager.async_generate(
+            *previous_quarter(dt_util.now().date()), context=self._context
+        )

@@ -65,6 +65,9 @@
       },
       "last_session_energy": {
         "name": "Energie laatste sessie"
+      },
+      "last_report": {
+        "name": "Laatste rapport"
       }
     },
     "binary_sensor": {
@@ -104,6 +107,9 @@
     },
     "entry_ambiguous": {
       "message": "Er zijn meerdere laadpunten ingesteld; kies er één."
+    },
+    "report_failed": {
+      "message": "Het rapport {period} kon niet worden gemaakt: {error}"
     }
   },
   "selector": {

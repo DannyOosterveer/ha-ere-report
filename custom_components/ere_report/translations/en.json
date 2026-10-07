@@ -65,6 +65,9 @@
       },
       "last_session_energy": {
         "name": "Last session energy"
+      },
+      "last_report": {
+        "name": "Last report"
       }
     },
     "binary_sensor": {
@@ -104,6 +107,9 @@
     },
     "entry_ambiguous": {
       "message": "More than one charge point is set up; choose one."
+    },
+    "report_failed": {
+      "message": "The {period} report could not be created: {error}"
     }
   },
   "selector": {

@@ -31,4 +31,6 @@ ATTR_YEAR = "year"
 ATTR_QUARTER = "quarter"
 
 EVENT_REPORT_GENERATED = f"{DOMAIN}_generated"
+PANEL_URL = "ere-report"
+STATIC_URL = f"/{DOMAIN}_static"
 SIGNAL_UPDATE = f"{DOMAIN}_update_{{}}"

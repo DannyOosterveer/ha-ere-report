@@ -45,8 +45,17 @@ De sensor moet `device_class: energy` hebben en langetermijnstatistieken opbouwe
 ## Het rapport
 
 Bestanden komen in `config/ere_reports/`, bijvoorbeeld `ere_laadpaal_2026_q3.xlsx` en `.csv`.
-Je krijgt een melding in Home Assistant met downloadlinks. De map `www/` wordt bewust niet gebruikt:
-die is zonder inloggen bereikbaar en het rapport bevat je adres en EAN-code.
+De map `www/` wordt bewust niet gebruikt: die is zonder inloggen bereikbaar en het rapport bevat je
+adres en EAN-code. Om dezelfde reden kunnen alleen beheerders de rapporten zien en downloaden.
+
+Je vindt de rapporten op drie plekken:
+
+- **ERE-rapporten** in de zijbalk: alle rapporten met downloadknoppen, en per laadpunt een knop om
+  een rapport voor een gekozen kwartaal te maken. De uitkomst of foutmelding verschijnt er direct onder.
+- **Meldingen** (het belletje): na elk rapport een melding met downloadlinks. Als het automatische
+  kwartaalrapport mislukt, staat ook dat hier.
+- **Logboek**: na elk rapport een regel als "heeft het rapport Q3 2026 gemaakt: 805,12 kWh,
+  37 sessies", gekoppeld aan wie of wat het rapport startte.
 
 | Tabblad | Inhoud |
 | --- | --- |
@@ -64,7 +73,10 @@ Herkomst van een sessie:
 
 ## Handmatig een rapport maken
 
-- Knop "Rapport vorig kwartaal maken" op het apparaat.
+- Knop "Rapport maken" op de pagina ERE-rapporten, voor elk kwartaal.
+- Knop "Rapport vorig kwartaal maken" op het apparaat. Een knop in Home Assistant toont als status
+  alleen het tijdstip waarop hij is ingedrukt; de uitkomst zie je in het logboek, bij de sensor
+  "Laatste rapport" en in de melding. Gaat het mis, dan krijg je direct een foutmelding in beeld.
 - Actie `ere_report.generate_report` met optioneel `year` en `quarter`. De actie geeft de
   bestandspaden en totalen terug, zodat je er een automatisering aan kunt hangen.
 - Na elk rapport wordt de gebeurtenis `ere_report_generated` afgevuurd met dezelfde gegevens.
@@ -79,6 +91,7 @@ Een rapport over een kwartaal dat nog loopt, wordt als voorlopig gemarkeerd.
 | Sessies dit kwartaal | Aantal vastgelegde sessies |
 | Energie laatste sessie | kWh van de laatste sessie, met start, eind en meterstanden als attributen |
 | Sessie actief | Aan zolang er een sessie loopt |
+| Laatste rapport | Tijdstip van het laatste rapport, met periode, kWh en sessies als attributen |
 
 ## Instellingen
 

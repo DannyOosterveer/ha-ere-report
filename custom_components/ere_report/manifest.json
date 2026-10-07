@@ -1,14 +1,20 @@
 {
   "domain": "ere_report",
   "name": "ERE Charging Report",
+  "after_dependencies": [
+    "logbook"
+  ],
   "codeowners": [
     "@DannyOosterveer"
   ],
   "config_flow": true,
   "dependencies": [
+    "frontend",
     "http",
+    "panel_custom",
     "persistent_notification",
-    "recorder"
+    "recorder",
+    "websocket_api"
   ],
   "documentation": "https://github.com/DannyOosterveer/ha-ere-report",
   "integration_type": "service",
@@ -17,5 +23,5 @@
   "requirements": [
     "openpyxl>=3.1.0"
   ],
-  "version": "0.1.1"
+  "version": "0.2.0"
 }

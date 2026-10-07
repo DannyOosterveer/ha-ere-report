@@ -20,12 +20,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
     State,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_call_later,
@@ -54,6 +57,7 @@ from .const import (
     DEFAULT_MIN_SESSION_KWH,
     DOMAIN,
     EVENT_REPORT_GENERATED,
+    PANEL_URL,
     REPORT_DIR,
     SIGNAL_UPDATE,
     STORAGE_VERSION,
@@ -94,6 +98,8 @@ class EreReportManager:
         self.quarter_begin_reading: float | None = None
         self._quarter: tuple[int, int] | None = None
         self._last_auto_report: str | None = None
+        # Generated reports by file stem, newest last.
+        self.reports: dict[str, dict[str, Any]] = {}
         self._store: Store[dict[str, Any]] = Store(
             hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
         )
@@ -106,6 +112,16 @@ class EreReportManager:
     @property
     def last_session(self) -> Session | None:
         return self.sessions[-1] if self.sessions else None
+
+    @property
+    def last_report(self) -> dict[str, Any] | None:
+        if not self.reports:
+            return None
+        return max(self.reports.values(), key=lambda report: report["generated"])
+
+    @property
+    def dutch(self) -> bool:
+        return self.hass.config.language.startswith("nl")
 
     @property
     def sessions_this_quarter(self) -> int:
@@ -128,6 +144,7 @@ class EreReportManager:
             self.sessions = [Session.from_dict(s) for s in stored.get("sessions", [])]
             self.tracker.restore(stored.get("tracker", {}))
             self._last_auto_report = stored.get("last_auto_report")
+            self.reports = stored.get("reports", {})
             if since := stored.get("tracking_since"):
                 self.tracking_since = datetime.fromisoformat(since)
         if self.tracking_since is None:
@@ -165,6 +182,7 @@ class EreReportManager:
             "sessions": [s.as_dict() for s in self.sessions],
             "tracker": self.tracker.as_dict(),
             "last_auto_report": self._last_auto_report,
+            "reports": self.reports,
         }
 
     @callback
@@ -217,8 +235,8 @@ class EreReportManager:
         elif self._last_auto_report != key:
             try:
                 await self.async_generate(year, quarter)
-            except Exception:
-                _LOGGER.exception("Could not generate the report for %s", key)
+            except HomeAssistantError as err:
+                self._notify_failure(year, quarter, err)
                 return
             self._last_auto_report = key
         else:
@@ -299,22 +317,39 @@ class EreReportManager:
             self.entry.options.get(CONF_REPORT_LANGUAGE, DEFAULT_LANGUAGE),
         )
 
-    async def async_generate(self, year: int, quarter: int) -> dict[str, Any]:
-        """Write the report files for a quarter and announce them."""
+    async def async_generate(
+        self, year: int, quarter: int, context: Context | None = None
+    ) -> dict[str, Any]:
+        """Write the report files for a quarter and announce them.
+
+        Raises HomeAssistantError, so a button press or action call shows the
+        failure in the UI instead of only in the log.
+        """
         tz = dt_util.get_default_time_zone()
-        data = await self.async_build_report(year, quarter)
-        integration = await async_get_integration(self.hass, DOMAIN)
-        version = str(integration.version or "")
         stem = f"ere_{slugify(self.entry.title)}_{year}_q{quarter}"
         folder = Path(self.hass.config.path(REPORT_DIR))
         xlsx_path = folder / f"{stem}.xlsx"
         csv_path = folder / f"{stem}.csv"
+        try:
+            data = await self.async_build_report(year, quarter)
+            integration = await async_get_integration(self.hass, DOMAIN)
+            version = str(integration.version or "")
 
-        def _write() -> None:
-            write_xlsx(data, xlsx_path, tz, version)
-            write_csv(data, csv_path, tz)
+            def _write() -> None:
+                write_xlsx(data, xlsx_path, tz, version)
+                write_csv(data, csv_path, tz)
 
-        await self.hass.async_add_executor_job(_write)
+            await self.hass.async_add_executor_job(_write)
+        except Exception as err:
+            _LOGGER.exception("Could not generate the report for Q%s %s", quarter, year)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="report_failed",
+                translation_placeholders={
+                    "period": f"Q{quarter} {year}",
+                    "error": str(err) or type(err).__name__,
+                },
+            ) from err
 
         result = {
             "config_entry_id": self.entry.entry_id,
@@ -331,6 +366,33 @@ class EreReportManager:
             "csv_path": str(csv_path),
             "notes": data.notes,
         }
+        self.reports.pop(stem, None)
+        self.reports[stem] = {
+            "stem": stem,
+            "year": year,
+            "quarter": quarter,
+            "generated": dt_util.utcnow().isoformat(),
+            "complete": data.complete,
+            "total_kwh": data.meter_total,
+            "sessions": len(data.sessions),
+            "notes": data.notes,
+        }
+        self._store.async_delay_save(self._data_to_save, 0)
+        async_dispatcher_send(self.hass, self.signal)
+        self._notify_success(stem, year, quarter, data)
+        event_data = dict(result)
+        # Lets the logbook show the event on the "last report" sensor and device.
+        if entity_id := er.async_get(self.hass).async_get_entity_id(
+            "sensor", DOMAIN, f"{self.entry.entry_id}_last_report"
+        ):
+            event_data["entity_id"] = entity_id
+        self.hass.bus.async_fire(EVENT_REPORT_GENERATED, event_data, context=context)
+        return result
+
+    @callback
+    def _notify_success(
+        self, stem: str, year: int, quarter: int, data: ReportData
+    ) -> None:
         links = {
             suffix: async_sign_path(
                 self.hass,
@@ -339,27 +401,44 @@ class EreReportManager:
             )
             for suffix in ("xlsx", "csv")
         }
-        if self.hass.config.language.startswith("nl"):
-            message = (
-                f"**{self.entry.title} — Q{quarter} {year}**: "
-                f"{data.meter_total:.2f} kWh, {len(data.sessions)} sessies.\n\n"
-                f"[Download xlsx]({links['xlsx']}) · [Download csv]({links['csv']})\n\n"
-                f"De bestanden staan in `{folder}`."
-            )
+        if self.dutch:
             title = "ERE-laadrapport"
+            summary = f"{data.meter_total:.2f} kWh, {len(data.sessions)} sessies."
+            all_reports = "Alle rapporten"
         else:
-            message = (
-                f"**{self.entry.title} — Q{quarter} {year}**: "
-                f"{data.meter_total:.2f} kWh, {len(data.sessions)} sessions.\n\n"
-                f"[Download xlsx]({links['xlsx']}) · [Download csv]({links['csv']})\n\n"
-                f"The files are stored in `{folder}`."
-            )
             title = "ERE charging report"
+            summary = f"{data.meter_total:.2f} kWh, {len(data.sessions)} sessions."
+            all_reports = "All reports"
+        persistent_notification.async_create(
+            self.hass,
+            (
+                f"**{self.entry.title} — Q{quarter} {year}**: {summary}\n\n"
+                f"[Download xlsx]({links['xlsx']}) · [Download csv]({links['csv']})"
+                f" · [{all_reports}](/{PANEL_URL})"
+            ),
+            title=title,
+            notification_id=f"{DOMAIN}_{self.entry.entry_id}_{year}q{quarter}",
+        )
+
+    @callback
+    def _notify_failure(self, year: int, quarter: int, err: Exception) -> None:
+        if self.dutch:
+            title = "ERE-laadrapport mislukt"
+            message = (
+                f"Het rapport voor **{self.entry.title} — Q{quarter} {year}** kon niet "
+                f"automatisch worden gemaakt.\n\n{err}\n\nProbeer het opnieuw via "
+                f"[ERE-rapporten](/{PANEL_URL}); details staan in het logboek."
+            )
+        else:
+            title = "ERE charging report failed"
+            message = (
+                f"The report for **{self.entry.title} — Q{quarter} {year}** could not "
+                f"be created automatically.\n\n{err}\n\nTry again from "
+                f"[ERE reports](/{PANEL_URL}); details are in the log."
+            )
         persistent_notification.async_create(
             self.hass,
             message,
             title=title,
             notification_id=f"{DOMAIN}_{self.entry.entry_id}_{year}q{quarter}",
         )
-        self.hass.bus.async_fire(EVENT_REPORT_GENERATED, result)
-        return result

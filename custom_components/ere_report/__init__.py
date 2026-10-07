@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from pathlib import Path
-import re
 
 from aiohttp import web
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import panel_custom
+from homeassistant.components.http import (
+    KEY_HASS_USER,
+    HomeAssistantView,
+    StaticPathConfig,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
@@ -17,6 +21,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 import voluptuous as vol
 
@@ -25,12 +30,15 @@ from .const import (
     ATTR_QUARTER,
     ATTR_YEAR,
     DOMAIN,
+    PANEL_URL,
     PLATFORMS,
     REPORT_DIR,
     SERVICE_GENERATE_REPORT,
+    STATIC_URL,
 )
 from .history import previous_quarter
 from .manager import EreReportManager
+from .websocket import REPORT_FILENAME, async_register as async_register_websocket
 
 type EreReportConfigEntry = ConfigEntry[EreReportManager]
 
@@ -46,17 +54,23 @@ SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-REPORT_FILENAME = re.compile(r"ere_[a-z0-9_]+_\d{4}_q[1-4]\.(xlsx|csv)")
-
 
 class ReportDownloadView(HomeAssistantView):
-    """Serve generated reports to logged-in users."""
+    """Serve generated reports to administrators.
+
+    The files hold the applicant's address and EAN code. Links in
+    notifications are signed by the system content user when a report is
+    created automatically, so system users are allowed as well.
+    """
 
     url = f"/api/{DOMAIN}/{{filename}}"
     name = f"api:{DOMAIN}:download"
 
     async def get(self, request: web.Request, filename: str) -> web.StreamResponse:
         hass: HomeAssistant = request.app["hass"]
+        user = request[KEY_HASS_USER]
+        if not (user.is_admin or user.system_generated):
+            raise web.HTTPForbidden
         if not REPORT_FILENAME.fullmatch(filename):
             raise web.HTTPNotFound
         path = Path(hass.config.path(REPORT_DIR, filename))
@@ -69,8 +83,28 @@ class ReportDownloadView(HomeAssistantView):
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the download view and the report action."""
+    """Register the download view, the reports panel and the report action."""
     hass.http.register_view(ReportDownloadView())
+    async_register_websocket(hass)
+    integration = await async_get_integration(hass, DOMAIN)
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                STATIC_URL, str(Path(__file__).parent / "frontend"), cache_headers=False
+            )
+        ]
+    )
+    await panel_custom.async_register_panel(
+        hass,
+        frontend_url_path=PANEL_URL,
+        webcomponent_name="ere-report-panel",
+        sidebar_title=(
+            "ERE-rapporten" if hass.config.language.startswith("nl") else "ERE reports"
+        ),
+        sidebar_icon="mdi:file-chart-outline",
+        module_url=f"{STATIC_URL}/ere-report-panel.js?v={integration.version}",
+        require_admin=True,
+    )
 
     async def generate_report(call: ServiceCall) -> ServiceResponse:
         entries: list[EreReportConfigEntry] = [
