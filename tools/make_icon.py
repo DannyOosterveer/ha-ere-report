@@ -96,18 +96,18 @@ def draw(theme: dict[str, str]) -> Image.Image:
     d.rounded_rectangle((1120, 300, 1340, 900), radius=110, fill=body)
     d.rounded_rectangle((1150, 860, 1310, 1140), radius=60, fill=body)
 
-    # Leaf, partly behind the coin, with a gap around it.
-    base, tip = (1430, 1560), (2130, 640)
+    # Large leaf with its lower part behind the coin.
+    base, tip = (1640, 1700), (2230, 720)
     gap = Image.new("L", (SIZE, SIZE), 0)
-    ImageDraw.Draw(gap).polygon(leaf_polygon(base, tip, 300), fill=255)
+    ImageDraw.Draw(gap).polygon(leaf_polygon(base, tip, 400), fill=255)
     img = knockout(img, gap)
     d = ImageDraw.Draw(img)
-    d.polygon(leaf_polygon(base, tip, 240), fill=GREEN)
+    d.polygon(leaf_polygon(base, tip, 330), fill=GREEN)
     vein_end = (base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base[1]) * 0.8)
     d.line((base, vein_end), fill=GREEN_VEIN, width=32)
 
     # Coin in front, with a gap so it reads on any background.
-    cx, cy, radius = 1690, 1700, 370
+    cx, cy, radius = 1640, 1720, 380
     gap = Image.new("L", (SIZE, SIZE), 0)
     g = radius + 55
     ImageDraw.Draw(gap).ellipse((cx - g, cy - g, cx + g, cy + g), fill=255)
