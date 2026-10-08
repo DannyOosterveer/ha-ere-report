@@ -63,7 +63,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "meter_end": "Meterstand eind periode (kWh)",
         "delivered": "Geleverd in periode (kWh)",
         "session_count": "Aantal laadsessies",
-        "sessions_total": "Som laadsessies (kWh)",
         "footer": (
             "Aangemaakt op {generated} door Home Assistant (ERE-laadrapport {version})."
         ),
@@ -80,7 +79,7 @@ TEXTS: dict[str, dict[str, object]] = {
             "Opmerking",
         ],
         "total": "Totaal",
-        "month_headers": ["Maand", "Aantal sessies", "kWh sessies", "kWh meter"],
+        "month_headers": ["Maand", "Aantal sessies", "kWh"],
         "csv_columns": [
             "laadpunt",
             "serienummer",
@@ -171,7 +170,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "meter_end": "Meter reading at end of period (kWh)",
         "delivered": "Delivered in period (kWh)",
         "session_count": "Number of charging sessions",
-        "sessions_total": "Sum of charging sessions (kWh)",
         "footer": (
             "Created on {generated} by Home Assistant (ERE charging report {version})."
         ),
@@ -188,7 +186,7 @@ TEXTS: dict[str, dict[str, object]] = {
             "Remark",
         ],
         "total": "Total",
-        "month_headers": ["Month", "Sessions", "kWh sessions", "kWh meter"],
+        "month_headers": ["Month", "Sessions", "kWh"],
         "csv_columns": [
             "charge_point",
             "serial_number",

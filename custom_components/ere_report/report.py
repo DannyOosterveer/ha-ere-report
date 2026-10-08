@@ -60,7 +60,6 @@ class ReportData:
     meter_end: float | None
     meter_total: float
     sessions: list[Session]
-    month_meter_kwh: dict[int, float]
     language: str = DEFAULT_LANGUAGE
     notes: list[str] = field(default_factory=list)
 
@@ -164,11 +163,6 @@ def build_report(
     sessions += reconstruct_sessions(uncovered)
     sessions.sort(key=lambda s: s.start)
 
-    month_meter_kwh: dict[int, float] = {}
-    for row in period:
-        month = row.start.astimezone(tz).month
-        month_meter_kwh[month] = month_meter_kwh.get(month, 0.0) + row.change
-
     data = ReportData(
         meta=meta,
         year=year,
@@ -181,7 +175,6 @@ def build_report(
         meter_end=meter_end,
         meter_total=meter_total,
         sessions=sessions,
-        month_meter_kwh=month_meter_kwh,
         language=language,
     )
     data.notes = _notes(data, period, now, tz)
@@ -310,7 +303,6 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 (t["meter_end"], data.meter_end),
                 (t["delivered"], data.meter_total),
                 (t["session_count"], len(data.sessions)),
-                (t["sessions_total"], data.sessions_total),
             ],
         ),
     ]
@@ -379,6 +371,7 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
 
     ws = wb.create_sheet(t["sheet_months"])
     header(ws, 1, t["month_headers"])
+    # A session counts in the month it starts, so count and kWh match per row.
     for month in data.months:
         in_month = [s for s in data.sessions if s.start.astimezone(tz).month == month]
         ws.append(
@@ -386,17 +379,16 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 t["months"][month - 1],
                 len(in_month),
                 round(sum(s.kwh for s in in_month), 2),
-                round(data.month_meter_kwh.get(month, 0.0), 2),
             ]
         )
     ws.append([])
-    ws.append([t["total"], len(data.sessions), data.sessions_total, data.meter_total])
-    for col in range(1, 5):
+    ws.append([t["total"], len(data.sessions), data.sessions_total])
+    for col in range(1, 4):
         ws.cell(row=ws.max_row, column=col).font = bold
-    for row in ws.iter_rows(min_row=2, min_col=3, max_col=4):
+    for row in ws.iter_rows(min_row=2, min_col=3, max_col=3):
         for cell in row:
             cell.number_format = "0.00"
-    for column, width in zip("ABCD", (14, 16, 14, 14), strict=True):
+    for column, width in zip("ABC", (14, 16, 14), strict=True):
         ws.column_dimensions[column].width = width
 
     path.parent.mkdir(parents=True, exist_ok=True)

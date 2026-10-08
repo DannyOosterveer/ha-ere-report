@@ -85,7 +85,7 @@ Je vindt de rapporten op drie plekken:
 | --- | --- |
 | Samenvatting | Naam, adres, EAN, laadpaal, meterstand begin en eind, geleverde kWh, opmerkingen |
 | Sessies | Per sessie: start, eind, duur, meterstand start en eind, kWh, herkomst |
-| Maandtotalen | Per maand: aantal sessies, kWh uit sessies, kWh volgens de meter |
+| Maandtotalen | Per maand: aantal sessies en kWh, geteld in de maand waarin een sessie begint |
 
 Herkomst van een sessie:
 

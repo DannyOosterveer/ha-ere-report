@@ -172,12 +172,14 @@ def test_write_files(tmp_path: Path) -> None:
     assert not any("MID" in str(label) for label in summary)
     assert "Meetbron in Home Assistant" not in summary
     assert "Buiten sessies geleverd (kWh)" not in summary
+    assert "Som laadsessies (kWh)" not in summary
     sessions = list(workbook["Sessies"].iter_rows(values_only=True))
     assert sessions[1][2] == datetime(2026, 7, 1, 9, 0)
     assert sessions[1][7] == 10.0
     months = list(workbook["Maandtotalen"].iter_rows(values_only=True))
-    assert months[1] == ("juli", 1, 10.0, 10.0)
-    assert months[2] == ("augustus", 1, 11.0, 11.0)
+    assert months[0] == ("Maand", "Aantal sessies", "kWh")
+    assert months[1] == ("juli", 1, 10.0)
+    assert months[2] == ("augustus", 1, 11.0)
 
     with xlsx.with_suffix(".csv").open(encoding="utf-8") as handle:
         lines = list(csv.DictReader(handle))
