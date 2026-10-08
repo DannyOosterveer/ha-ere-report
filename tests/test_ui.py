@@ -147,3 +147,25 @@ async def test_panel_lists_and_serves_reports(
     assert (await ws.receive_json())["error"]["code"] == "unauthorized"
     forbidden = await client.get(f"/api/{DOMAIN}/{report['stem']}.csv")
     assert forbidden.status == 403
+
+
+async def test_panel_fills_in_reports_from_older_versions(
+    recorder_mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    report_files,
+) -> None:
+    """Reports made before 0.2.0 have no record; the list reads the file."""
+    hass.states.async_set(ENTITY, "1000.0", ATTRS)
+    entry = await setup_entry(hass)
+    year, quarter = previous_quarter(dt_util.now().date())
+    result = await entry.runtime_data.async_generate(year, quarter)
+    entry.runtime_data.reports.clear()
+
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/reports"})
+    [report] = (await ws.receive_json())["result"]["reports"]
+    assert report["charger"] == "Laadpaal"
+    assert report["entry_id"] == entry.entry_id
+    assert report["total_kwh"] == result["total_kwh"]
+    assert report["sessions"] == result["sessions"]
