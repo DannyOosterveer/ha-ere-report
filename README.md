@@ -8,6 +8,9 @@
 Maakt per kwartaal een rapport van wat je laadpaal heeft geleverd, bedoeld als bewijsstuk bij het
 inboeken van ERE's (emissiereductie-eenheden) via een inboekdienstverlener.
 
+Nieuw met ERE's? In het [stappenplan van De Groene Nerds](https://degroenenerds.nl/artikel/stappenplan-zo-verdien-jij-tot-honderden-euros-met-thuisladen-door-ere-certificaten/)
+lees je wat ERE's zijn, wat je ermee kunt verdienen en hoe je de vergoeding krijgt.
+
 *English summary: a Home Assistant custom integration that records EV charging sessions from any
 cumulative kWh sensor and produces a quarterly xlsx/csv report for the Dutch ERE scheme. The
 integration is available in Dutch and English; the report language is a setting (Dutch by default).*
@@ -15,8 +18,6 @@ integration is available in Dutch and English; the report language is a setting 
 ## Lees dit eerst
 
 - **Dit is geen koppeling met een inboeker.** Je krijgt een bestand dat je zelf uploadt.
-- **De data komt uit Home Assistant, niet uit de backend van je laadpaal.** Of een inboeker en diens
-  verificateur dat accepteren, bepalen zij. Vraag het na voordat je erop rekent.
 - **Kies de sensor van de MID-meter in je laadpaal.** Voor particulieren eist de NEa een
   MID-gecertificeerde meter die in de laadpaal is geïntegreerd; zonder die meter kun je geen ERE's
   aanvragen. De integratie kan niet controleren welke meter een sensor uitleest.
@@ -94,7 +95,7 @@ Je vindt de rapporten op drie plekken:
 | Sessies | Per sessie: start, eind, duur, meterstand start en eind, kWh, opmerking |
 | Maandtotalen | Per maand: aantal sessies en kWh, geteld in de maand waarin een sessie begint |
 
-## Handmatig een rapport maken
+## Een rapport maken
 
 - Knop "Rapport maken" op de pagina ERE-rapporten, voor elk kwartaal.
 - Knop "Rapport vorig kwartaal maken" op het apparaat. Een knop in Home Assistant toont als status
