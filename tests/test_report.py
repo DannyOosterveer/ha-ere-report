@@ -258,3 +258,23 @@ def test_difference_is_reported_as_a_check() -> None:
         note.startswith("Controle: de som van de sessies (3,50 kWh) wijkt 0,50 kWh")
         for note in data.notes
     )
+
+
+def test_empty_details_are_left_off(tmp_path: Path) -> None:
+    rows = quarter_rows({10: 6.0})
+    now = Q3_END.astimezone(UTC) + timedelta(hours=1)
+    meta = ReportMeta(
+        charger_name="Laadpaal", energy_entity="sensor.meter", charger_brand="Alfen"
+    )
+    data = build_report(meta, 2026, 3, TZ, now, rows, [])
+    xlsx = tmp_path / "report.xlsx"
+    write_xlsx(data, xlsx, TZ, "0.3.4")
+    labels = [
+        row[0]
+        for row in load_workbook(xlsx)["Samenvatting"].iter_rows(values_only=True)
+    ]
+    assert "Aanvrager" not in labels
+    assert "EAN-code aansluiting" not in labels
+    assert "Serienummer" not in labels
+    assert "Merk" in labels
+    assert "Laadpunt" in labels

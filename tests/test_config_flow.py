@@ -4,11 +4,14 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ere_report.config_flow import CONF_SHOW_ALL
 from custom_components.ere_report.const import (
+    CONF_CHARGER_BRAND,
+    CONF_CHARGER_MODEL,
+    CONF_CHARGER_SERIAL,
     CONF_EAN,
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
@@ -148,3 +151,48 @@ async def test_without_candidates_all_energy_sensors_are_offered(
     schema = result["data_schema"].schema
     assert schema[CONF_ENERGY_ENTITY].config["device_class"] == ["energy"]
     assert CONF_SHOW_ALL not in {str(key) for key in schema}
+
+
+async def test_details_are_prefilled_from_the_charger(
+    recorder_mock,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    other = MockConfigEntry(domain="alfen_wallbox")
+    other.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other.entry_id,
+        identifiers={("alfen_wallbox", "box")},
+        manufacturer="Alfen",
+        model="Eve Single Pro-line",
+        serial_number="ACE0001",
+    )
+    meter = entity_registry.async_get_or_create(
+        "sensor",
+        "alfen_wallbox",
+        "meter",
+        device_id=device.id,
+        suggested_object_id="ace_meter_reading",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NAME: "Laadpaal", CONF_ENERGY_ENTITY: meter.entity_id}
+    )
+    suggested = {
+        str(key): key.description["suggested_value"]
+        for key in result["data_schema"].schema
+        if key.description and "suggested_value" in key.description
+    }
+    assert suggested[CONF_CHARGER_BRAND] == "Alfen"
+    assert suggested[CONF_CHARGER_MODEL] == "Eve Single Pro-line"
+    assert suggested[CONF_CHARGER_SERIAL] == "ACE0001"
+    assert suggested[CONF_EAN] == ""
+
+    # Everything is optional: submitting the form as it is creates the entry.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_EAN] == ""

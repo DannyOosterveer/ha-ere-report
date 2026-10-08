@@ -12,7 +12,7 @@
       },
       "details": {
         "title": "Gegevens voor het rapport",
-        "description": "Deze gegevens komen op het rapport. Naam, adres en EAN moeten overeenkomen met je energiefactuur. Je kunt alles later nog aanpassen.",
+        "description": "Alles op deze pagina is optioneel. Laat leeg wat je niet weet of niet op het rapport wilt, en klik op Verzenden. Je kunt het later aanvullen via Configureren. Wat Home Assistant al van je laadpaal weet, is alvast ingevuld.",
         "data": {
           "holder_name": "Naam van de aanvrager",
           "address": "Adres van de laadlocatie",
@@ -22,6 +22,10 @@
           "charger_model": "Type laadpaal",
           "charger_serial": "Serienummer laadpaal",
           "report_language": "Taal van het rapport"
+        },
+        "data_description": {
+          "ean": "Staat op je energienota, of zoek hem op met postcode en huisnummer op eancodeboek.nl.",
+          "charger_serial": "Staat op het typeplaatje van de laadpaal of in de app van de fabrikant."
         }
       }
     },
@@ -47,6 +51,11 @@
           "charger_serial": "Serienummer laadpaal",
           "idle_minutes": "Sessie beëindigen na zo lang zonder verbruik",
           "report_language": "Taal van het rapport"
+        },
+        "description": "Alles is optioneel. Lege velden komen niet op het rapport.",
+        "data_description": {
+          "ean": "Staat op je energienota, of zoek hem op met postcode en huisnummer op eancodeboek.nl.",
+          "charger_serial": "Staat op het typeplaatje van de laadpaal of in de app van de fabrikant."
         }
       }
     },

@@ -57,9 +57,15 @@ Ga in HACS naar het menu (⋮) → **Aangepaste repositories**. Vul
 Klik op de knop, of ga naar Instellingen → Apparaten & diensten → Integratie toevoegen →
 "ERE Charging Report".
 
-Kies daarna de sensor met de meterstand van je laadpaal en vul de gegevens voor het rapport in.
-De keuzelijst toont eerst alleen sensoren die op een laadpaalmeter lijken. Staat jouw sensor er
-niet bij, vink dan "Alle energiesensoren tonen" aan.
+Kies daarna de sensor met de meterstand van je laadpaal. De keuzelijst toont eerst alleen sensoren
+die op een laadpaalmeter lijken. Staat jouw sensor er niet bij, vink dan "Alle energiesensoren
+tonen" aan.
+
+In de volgende stap kun je je naam, adres, EAN-code en de gegevens van je laadpaal invullen. Dat
+is allemaal optioneel: wat je leeg laat, komt niet op het rapport, en je kunt het later aanvullen
+via Configureren. Merk, type en serienummer worden overgenomen als Home Assistant ze van je
+laadpaal kent. De EAN-code staat op je energienota, of zoek hem op met postcode en huisnummer op
+[eancodeboek.nl](https://www.eancodeboek.nl).
 
 De sensor moet `device_class: energy` hebben en langetermijnstatistieken opbouwen
 (`state_class: total_increasing`). Bij een Alfen met de Alfen Wallbox-integratie is dat

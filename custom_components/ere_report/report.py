@@ -293,6 +293,10 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
         ),
     ]
     for title, items in sections:
+        # Details the user left empty are left out, and so is an empty section.
+        items = [(label, value) for label, value in items if value != ""]
+        if not items:
+            continue
         ws.append([title])
         ws.cell(row=ws.max_row, column=1).font = bold
         ws.cell(row=ws.max_row, column=1).fill = header_fill

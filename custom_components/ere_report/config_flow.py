@@ -17,7 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    selector,
+)
 import voluptuous as vol
 
 from .const import (
@@ -117,6 +121,21 @@ def _user_schema(candidates: list[str], show_all: bool) -> vol.Schema:
             selector.BooleanSelector()
         )
     return vol.Schema(schema)
+
+
+def _device_details(hass: HomeAssistant, entity_id: str) -> dict[str, str]:
+    """Brand, model and serial number of the device the meter sensor belongs to."""
+    entity = er.async_get(hass).async_get(entity_id)
+    if not entity or not entity.device_id:
+        return {}
+    if not (device := dr.async_get(hass).async_get(entity.device_id)):
+        return {}
+    found = {
+        CONF_CHARGER_BRAND: device.manufacturer,
+        CONF_CHARGER_MODEL: device.model,
+        CONF_CHARGER_SERIAL: device.serial_number,
+    }
+    return {key: value for key, value in found.items() if value}
 
 
 def _details_schema(defaults: dict[str, Any], with_tuning: bool) -> vol.Schema:
@@ -220,9 +239,12 @@ class EreReportConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_ENERGY_ENTITY: self._data[CONF_ENERGY_ENTITY]},
                     options=options,
                 )
+        defaults = user_input or _device_details(
+            self.hass, self._data[CONF_ENERGY_ENTITY]
+        )
         return self.async_show_form(
             step_id="details",
-            data_schema=_details_schema(user_input or {}, with_tuning=False),
+            data_schema=_details_schema(defaults, with_tuning=False),
             errors=errors,
         )
 
@@ -238,10 +260,19 @@ class EreReportOptionsFlow(OptionsFlow):
             options, errors = _clean(user_input)
             if not errors:
                 return self.async_create_entry(data=options)
+        if user_input is None:
+            # Fill gaps with what Home Assistant knows about the charger.
+            saved = {
+                key: value
+                for key, value in self.config_entry.options.items()
+                if value not in ("", None)
+            }
+            device = _device_details(
+                self.hass, self.config_entry.data[CONF_ENERGY_ENTITY]
+            )
+            user_input = {**device, **saved}
         return self.async_show_form(
             step_id="init",
-            data_schema=_details_schema(
-                user_input or dict(self.config_entry.options), with_tuning=True
-            ),
+            data_schema=_details_schema(user_input, with_tuning=True),
             errors=errors,
         )
