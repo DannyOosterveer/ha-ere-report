@@ -62,7 +62,6 @@ class ReportData:
     sessions: list[Session]
     month_meter_kwh: dict[int, float]
     language: str = DEFAULT_LANGUAGE
-    min_kwh: float = 0.05
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -70,7 +69,8 @@ class ReportData:
         return round(sum(s.kwh for s in self.sessions), 2)
 
     @property
-    def unallocated(self) -> float:
+    def difference(self) -> float:
+        """Meter total minus the sum of the sessions; zero when all kWh are in."""
         return round(self.meter_total - self.sessions_total, 2)
 
     @property
@@ -123,14 +123,15 @@ def build_report(
     now: datetime,
     rows: list[HourRow],
     recorded_sessions: list[Session],
-    tracking_since: datetime | None,
-    min_kwh: float,
     language: str = DEFAULT_LANGUAGE,
 ) -> ReportData:
     """Combine statistics and recorded sessions into a report.
 
     ``rows`` are hourly statistics covering the quarter plus some hours before
     it, so the meter reading at the start of the quarter can be determined.
+    Hours with consumption that no recorded session covers (before the
+    integration was installed, for example) are reconstructed, so every kWh
+    the meter delivered ends up in a session.
     """
     start, end = quarter_bounds(year, quarter, tz)
     rows = sorted(rows, key=lambda r: r.start)
@@ -150,13 +151,17 @@ def build_report(
     if meter_end is not None:
         meter_end = round(meter_end, 3)
 
-    reconstruct_rows = [
-        r for r in period if tracking_since is None or r.start + HOUR <= tracking_since
+    sessions = [
+        clipped
+        for recorded in recorded_sessions
+        if (clipped := _clip(recorded, start, end, meter_begin, meter_end))
     ]
-    sessions = reconstruct_sessions(reconstruct_rows, min_kwh)
-    for recorded in recorded_sessions:
-        if clipped := _clip(recorded, start, end, meter_begin, meter_end):
-            sessions.append(clipped)
+    uncovered = [
+        r
+        for r in period
+        if not any(s.start < r.start + HOUR and s.end >= r.start for s in sessions)
+    ]
+    sessions += reconstruct_sessions(uncovered)
     sessions.sort(key=lambda s: s.start)
 
     month_meter_kwh: dict[int, float] = {}
@@ -178,7 +183,6 @@ def build_report(
         sessions=sessions,
         month_meter_kwh=month_meter_kwh,
         language=language,
-        min_kwh=min_kwh,
     )
     data.notes = _notes(data, period, now, tz)
     return data
@@ -222,12 +226,13 @@ def _notes(
         notes.append(t["note_reconstructed"].format(count=counts[SOURCE_RECONSTRUCTED]))
     if counts[SOURCE_UNOBSERVED]:
         notes.append(t["note_unobserved"].format(count=counts[SOURCE_UNOBSERVED]))
-    if data.unallocated > 0:
+    if abs(data.difference) >= 0.01:
         decimal = "," if data.language == "nl" else "."
         notes.append(
-            t["note_unallocated"].format(
-                kwh=f"{data.unallocated:.2f}".replace(".", decimal),
-                min=f"{data.min_kwh:.2f}".replace(".", decimal),
+            t["note_difference"].format(
+                sessions=f"{data.sessions_total:.2f}".replace(".", decimal),
+                total=f"{data.meter_total:.2f}".replace(".", decimal),
+                difference=f"{abs(data.difference):.2f}".replace(".", decimal),
             )
         )
     return notes
@@ -306,11 +311,6 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 (t["delivered"], data.meter_total),
                 (t["session_count"], len(data.sessions)),
                 (t["sessions_total"], data.sessions_total),
-                *(
-                    [(t["unallocated"], data.unallocated)]
-                    if data.unallocated > 0
-                    else []
-                ),
             ],
         ),
     ]

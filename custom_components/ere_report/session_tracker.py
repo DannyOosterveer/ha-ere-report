@@ -75,12 +75,12 @@ class SessionTracker:
     A session starts when the meter rises and ends once it has not risen for
     ``idle_timeout``. Readings that arrive after a period without observation
     (restart, unavailable sensor) are recorded as ``unobserved`` instead of
-    being presented as if they were seen live.
+    being presented as if they were seen live. Every increase ends up in a
+    session, however small: for ERE, no delivered kWh may go missing.
     """
 
-    def __init__(self, idle_timeout: timedelta, min_kwh: float) -> None:
+    def __init__(self, idle_timeout: timedelta) -> None:
         self.idle_timeout = idle_timeout
-        self.min_kwh = min_kwh
         self.last_reading: float | None = None
         self.last_seen: datetime | None = None
         self._open: _OpenSession | None = None
@@ -124,9 +124,6 @@ class SessionTracker:
                 self._open.flags.append(FLAG_INTERRUPTED)
             else:
                 closed += self._close()
-                if delta < self.min_kwh:
-                    self.last_reading = reading
-                    return closed
                 self._open = _OpenSession(
                     start=gap_since,
                     meter_start=self.last_reading,
@@ -160,7 +157,7 @@ class SessionTracker:
         if current is None:
             return []
         session = self._to_session(current, end=current.last_increase, extra_flag=flag)
-        return [session] if session.kwh >= self.min_kwh else []
+        return [session] if session.kwh > 0 else []
 
     @staticmethod
     def _to_session(

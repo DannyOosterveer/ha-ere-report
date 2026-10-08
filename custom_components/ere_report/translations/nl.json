@@ -46,7 +46,6 @@
           "charger_model": "Type laadpaal",
           "charger_serial": "Serienummer laadpaal",
           "idle_minutes": "Sessie beëindigen na zo lang zonder verbruik",
-          "min_session_kwh": "Kleinste sessie die wordt vastgelegd",
           "report_language": "Taal van het rapport"
         }
       }

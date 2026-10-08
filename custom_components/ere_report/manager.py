@@ -50,11 +50,9 @@ from .const import (
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
-    CONF_MIN_SESSION_KWH,
     CONF_POSTCODE_CITY,
     CONF_REPORT_LANGUAGE,
     DEFAULT_IDLE_MINUTES,
-    DEFAULT_MIN_SESSION_KWH,
     DOMAIN,
     EVENT_REPORT_GENERATED,
     PANEL_URL,
@@ -84,14 +82,10 @@ class EreReportManager:
         self.hass = hass
         self.entry = entry
         self.energy_entity: str = entry.data[CONF_ENERGY_ENTITY]
-        self.min_kwh: float = entry.options.get(
-            CONF_MIN_SESSION_KWH, DEFAULT_MIN_SESSION_KWH
-        )
         self.tracker = SessionTracker(
             timedelta(
                 minutes=entry.options.get(CONF_IDLE_MINUTES, DEFAULT_IDLE_MINUTES)
             ),
-            self.min_kwh,
         )
         self.sessions: list[Session] = []
         self.tracking_since: datetime | None = None
@@ -312,8 +306,6 @@ class EreReportManager:
             now,
             rows,
             recorded,
-            self.tracking_since,
-            self.min_kwh,
             self.entry.options.get(CONF_REPORT_LANGUAGE, DEFAULT_LANGUAGE),
         )
 

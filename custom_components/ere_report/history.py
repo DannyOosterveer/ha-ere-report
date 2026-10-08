@@ -45,16 +45,18 @@ def previous_quarter(day: date) -> tuple[int, int]:
     return (year - 1, 4) if quarter == 1 else (year, quarter - 1)
 
 
-def reconstruct_sessions(rows: list[HourRow], threshold_kwh: float) -> list[Session]:
+def reconstruct_sessions(rows: list[HourRow]) -> list[Session]:
     """Cluster hours with consumption into sessions.
 
-    This is an estimate on a whole-hour grid, used only for periods in which
-    sessions were not recorded live.
+    Every hour with consumption counts, however small: a charge that starts
+    and is stopped right away by smart charging is still delivered energy.
+    This is an estimate on a whole-hour grid, used only for hours that are
+    not covered by a session recorded live.
     """
     clusters: list[list[HourRow]] = []
     for row in sorted(rows, key=lambda r: r.start):
-        # Round to the meter's resolution: 0.05 can arrive as 0.04999...
-        if round(row.change, 3) < threshold_kwh:
+        # Round to the meter's resolution to ignore floating-point noise.
+        if round(row.change, 3) <= 0:
             continue
         if clusters:
             empty_hours = (row.start - clusters[-1][-1].start) / HOUR - 1
@@ -73,7 +75,7 @@ def reconstruct_sessions(rows: list[HourRow], threshold_kwh: float) -> list[Sess
             Session(
                 start=first.start,
                 end=last.start + HOUR,
-                kwh=round(sum(r.change for r in cluster), 2),
+                kwh=round(sum(r.change for r in cluster), 3),
                 meter_start=meter_start,
                 meter_end=last.state,
                 source=SOURCE_RECONSTRUCTED,

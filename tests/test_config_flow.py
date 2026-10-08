@@ -13,7 +13,6 @@ from custom_components.ere_report.const import (
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
-    CONF_MIN_SESSION_KWH,
     DOMAIN,
 )
 
@@ -82,7 +81,6 @@ async def test_options_flow(recorder_mock, hass: HomeAssistant) -> None:
         {
             CONF_HOLDER_NAME: "J. Jansen",
             CONF_IDLE_MINUTES: 30,
-            CONF_MIN_SESSION_KWH: 0.1,
         },
     )
     await hass.async_block_till_done()

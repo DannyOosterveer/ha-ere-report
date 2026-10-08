@@ -29,11 +29,9 @@ from .const import (
     CONF_ENERGY_ENTITY,
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
-    CONF_MIN_SESSION_KWH,
     CONF_POSTCODE_CITY,
     CONF_REPORT_LANGUAGE,
     DEFAULT_IDLE_MINUTES,
-    DEFAULT_MIN_SESSION_KWH,
     DOMAIN,
 )
 from .report_text import DEFAULT_LANGUAGE, LANGUAGES
@@ -152,20 +150,6 @@ def _details_schema(defaults: dict[str, Any], with_tuning: bool) -> vol.Schema:
                 max=240,
                 step=1,
                 unit_of_measurement="min",
-                mode=selector.NumberSelectorMode.BOX,
-            )
-        )
-        schema[
-            vol.Required(
-                CONF_MIN_SESSION_KWH,
-                default=defaults.get(CONF_MIN_SESSION_KWH, DEFAULT_MIN_SESSION_KWH),
-            )
-        ] = selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0,
-                max=5,
-                step=0.01,
-                unit_of_measurement="kWh",
                 mode=selector.NumberSelectorMode.BOX,
             )
         )

@@ -27,7 +27,8 @@ integration is available in Dutch and English; the report language is a setting 
 - Maakt op de eerste dag van een nieuw kwartaal automatisch een rapport over het vorige kwartaal.
 - Het rapport opent met de meterstand aan het begin en eind van het kwartaal; dat verschil is het
   getal dat je inboekt. De sessies zijn de onderbouwing.
-- Verbruik dat niet aan een sessie is toegewezen, staat er als apart getal bij.
+- Elke afgenomen kWh komt in een sessie terecht, ook een korte start die de slimme aansturing
+  meteen weer stopt. De som van de sessies is daardoor gelijk aan wat de meter aangeeft.
 - Voor periodes vóór de installatie worden sessies gereconstrueerd uit de uurstatistieken van
   Home Assistant. Die sessies zijn op hele uren afgerond en als zodanig gemarkeerd.
 
@@ -123,8 +124,6 @@ Via "Configureren" pas je de rapportgegevens aan en stel je de sessiedetectie af
   tussendoor lang pauzeert, bijvoorbeeld bij laden op zonnestroom.
 - **Taal van het rapport**: Nederlands (standaard) of Engels. De bediening in Home Assistant volgt
   de taal van je Home Assistant.
-- **Kleinste sessie** (standaard 0,05 kWh). Kleiner verbruik telt wel mee in het totaal, maar wordt
-  geen sessie.
 
 ## Beperkingen
 

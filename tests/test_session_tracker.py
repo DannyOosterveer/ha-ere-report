@@ -19,7 +19,7 @@ def at(minutes: float) -> datetime:
 
 
 def make_tracker() -> SessionTracker:
-    return SessionTracker(timedelta(minutes=15), 0.05)
+    return SessionTracker(timedelta(minutes=15))
 
 
 def test_normal_session() -> None:
@@ -53,12 +53,14 @@ def test_two_sessions_separated_by_idle_time() -> None:
     assert second[0].meter_start == 11.0
 
 
-def test_tiny_session_is_dropped() -> None:
+def test_tiny_session_is_kept() -> None:
+    """A start that smart charging stops right away still delivered energy."""
     tracker = make_tracker()
     tracker.update(at(0), 10.0)
     tracker.update(at(1), 10.01)
-    assert tracker.tick(at(30)) == []
-    assert tracker.last_reading == 10.01
+    [session] = tracker.tick(at(30))
+    assert session.kwh == 0.01
+    assert session.meter_end == 10.01
 
 
 def test_restart_during_session_continues_it() -> None:

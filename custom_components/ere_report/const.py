@@ -16,11 +16,9 @@ CONF_CHARGER_BRAND = "charger_brand"
 CONF_CHARGER_MODEL = "charger_model"
 CONF_CHARGER_SERIAL = "charger_serial"
 CONF_IDLE_MINUTES = "idle_minutes"
-CONF_MIN_SESSION_KWH = "min_session_kwh"
 CONF_REPORT_LANGUAGE = "report_language"
 
 DEFAULT_IDLE_MINUTES = 15
-DEFAULT_MIN_SESSION_KWH = 0.05
 
 STORAGE_VERSION = 1
 REPORT_DIR = "ere_reports"

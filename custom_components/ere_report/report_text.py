@@ -64,7 +64,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "delivered": "Geleverd in periode (kWh)",
         "session_count": "Aantal laadsessies",
         "sessions_total": "Som laadsessies (kWh)",
-        "unallocated": "Buiten sessies geleverd (kWh)",
         "footer": (
             "Aangemaakt op {generated} door Home Assistant (ERE-laadrapport {version})."
         ),
@@ -119,10 +118,10 @@ TEXTS: dict[str, dict[str, object]] = {
             "was niet beschikbaar); de starttijd is het laatste moment waarop de "
             "meter nog werd gevolgd."
         ),
-        "note_unallocated": (
-            "{kwh} kWh is geleverd buiten een laadsessie: losse kleine afnames van "
-            "minder dan {min} kWh, bijvoorbeeld als de auto na het laden nog even "
-            "stroom vraagt. Deze kWh tellen mee in het geleverde totaal."
+        "note_difference": (
+            "Controle: de som van de sessies ({sessions} kWh) wijkt {difference} kWh "
+            "af van het geleverde totaal volgens de meter ({total} kWh). Het totaal "
+            "volgens de meter is leidend."
         ),
     },
     "en": {
@@ -173,7 +172,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "delivered": "Delivered in period (kWh)",
         "session_count": "Number of charging sessions",
         "sessions_total": "Sum of charging sessions (kWh)",
-        "unallocated": "Delivered outside sessions (kWh)",
         "footer": (
             "Created on {generated} by Home Assistant (ERE charging report {version})."
         ),
@@ -230,10 +228,10 @@ TEXTS: dict[str, dict[str, object]] = {
             "was unavailable); the start time is the last moment the meter was "
             "still being followed."
         ),
-        "note_unallocated": (
-            "{kwh} kWh was delivered outside a charging session: small separate "
-            "draws below {min} kWh, for example when the car briefly draws power "
-            "after charging. These kWh are included in the delivered total."
+        "note_difference": (
+            "Check: the sum of the sessions ({sessions} kWh) differs by {difference} "
+            "kWh from the delivered total according to the meter ({total} kWh). The "
+            "meter total is leading."
         ),
     },
 }
