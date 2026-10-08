@@ -84,16 +84,8 @@ Je vindt de rapporten op drie plekken:
 | Tabblad | Inhoud |
 | --- | --- |
 | Samenvatting | Naam, adres, EAN, laadpaal, meterstand begin en eind, geleverde kWh, opmerkingen |
-| Sessies | Per sessie: start, eind, duur, meterstand start en eind, kWh, herkomst |
+| Sessies | Per sessie: start, eind, duur, meterstand start en eind, kWh, opmerking |
 | Maandtotalen | Per maand: aantal sessies en kWh, geteld in de maand waarin een sessie begint |
-
-Herkomst van een sessie:
-
-| Herkomst | Betekenis |
-| --- | --- |
-| live gemeten | Start en stop zijn gezien terwijl Home Assistant de meter volgde |
-| niet live waargenomen | Verbruik tijdens een herstart of terwijl de sensor onbeschikbaar was; de starttijd is onzeker |
-| gereconstrueerd uit uurwaarden | Achteraf bepaald uit statistieken, afgerond op hele uren |
 
 ## Handmatig een rapport maken
 

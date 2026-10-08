@@ -89,7 +89,7 @@ def test_report_totals_and_reconstruction() -> None:
     assert [s.kwh for s in data.sessions] == [10.0, 11.0, 0.02]
     assert data.sessions_total == 21.02
     assert data.difference == 0.0
-    assert any("gereconstrueerd" in note for note in data.notes)
+    assert not any("gereconstrueerd" in note for note in data.notes)
     assert not any(note.startswith("Controle") for note in data.notes)
     assert not any("geen meetgegevens" in note for note in data.notes)
 
@@ -174,6 +174,7 @@ def test_write_files(tmp_path: Path) -> None:
     assert "Buiten sessies geleverd (kWh)" not in summary
     assert "Som laadsessies (kWh)" not in summary
     sessions = list(workbook["Sessies"].iter_rows(values_only=True))
+    assert "Herkomst" not in sessions[0]
     assert sessions[1][2] == datetime(2026, 7, 1, 9, 0)
     assert sessions[1][7] == 10.0
     months = list(workbook["Maandtotalen"].iter_rows(values_only=True))
@@ -195,7 +196,6 @@ def test_english_report(tmp_path: Path) -> None:
     meta = ReportMeta(charger_name="Charger", energy_entity="sensor.meter")
     data = build_report(meta, 2026, 3, TZ, now, rows, [], language="en")
     assert data.notes[0].startswith("Provisional report")
-    assert any("reconstructed" in note for note in data.notes)
 
     xlsx = tmp_path / "report.xlsx"
     write_xlsx(data, xlsx, TZ, "0.1.0")
@@ -208,7 +208,7 @@ def test_english_report(tmp_path: Path) -> None:
     sessions = list(workbook["Sessions"].iter_rows(values_only=True))
     assert sessions[0][1] == "Day"
     assert sessions[1][1] == "Wed"
-    assert sessions[1][8] == "reconstructed from hourly values"
+    assert "Source" not in sessions[0]
     with xlsx.with_suffix(".csv").open(encoding="utf-8") as handle:
         assert handle.readline().startswith("charge_point,serial_number,ean,")
 

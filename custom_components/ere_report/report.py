@@ -22,8 +22,6 @@ from .report_text import DEFAULT_LANGUAGE, texts
 from .session_tracker import (
     FLAG_ONGOING,
     FLAG_SPLIT,
-    SOURCE_RECONSTRUCTED,
-    SOURCE_UNOBSERVED,
     Session,
 )
 
@@ -211,14 +209,6 @@ def _notes(
                     by_readings=by_readings, total=data.meter_total
                 )
             )
-    counts = {
-        source: sum(1 for s in data.sessions if s.source == source)
-        for source in (SOURCE_RECONSTRUCTED, SOURCE_UNOBSERVED)
-    }
-    if counts[SOURCE_RECONSTRUCTED]:
-        notes.append(t["note_reconstructed"].format(count=counts[SOURCE_RECONSTRUCTED]))
-    if counts[SOURCE_UNOBSERVED]:
-        notes.append(t["note_unobserved"].format(count=counts[SOURCE_UNOBSERVED]))
     if abs(data.difference) >= 0.01:
         decimal = "," if data.language == "nl" else "."
         notes.append(
@@ -241,10 +231,6 @@ def _period_label(data: ReportData, tz: tzinfo) -> str:
         f"{t['period_joiner']} "
         f"{last_day.day} {months[last_day.month - 1]} {last_day.year} ({tz})"
     )
-
-
-def _source_label(data: ReportData, session: Session) -> str:
-    return texts(data.language)["sources"].get(session.source, session.source)
 
 
 def _remarks(data: ReportData, session: Session) -> str:
@@ -347,7 +333,6 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 session.meter_start,
                 session.meter_end,
                 round(session.kwh, 2),
-                _source_label(data, session),
                 _remarks(data, session),
             ]
         )
@@ -364,7 +349,7 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
     ws.cell(row=ws.max_row, column=8).font = bold
     ws.cell(row=ws.max_row, column=8).number_format = "0.00"
     for column, width in zip(
-        "ABCDEFGHIJ", (6, 6, 18, 18, 9, 22, 22, 10, 30, 40), strict=True
+        "ABCDEFGHI", (6, 6, 18, 18, 9, 22, 22, 10, 40), strict=True
     ):
         ws.column_dimensions[column].width = width
     ws.freeze_panes = "A2"
@@ -412,7 +397,6 @@ def write_csv(data: ReportData, path: Path, tz: tzinfo) -> None:
                     "" if session.meter_start is None else f"{session.meter_start:.3f}",
                     "" if session.meter_end is None else f"{session.meter_end:.3f}",
                     f"{session.kwh:.2f}",
-                    _source_label(data, session),
                     _remarks(data, session),
                 ]
             )

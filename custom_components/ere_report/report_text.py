@@ -7,9 +7,6 @@ from .session_tracker import (
     FLAG_METER_RESET,
     FLAG_ONGOING,
     FLAG_SPLIT,
-    SOURCE_LIVE,
-    SOURCE_RECONSTRUCTED,
-    SOURCE_UNOBSERVED,
 )
 
 LANGUAGES = ("nl", "en")
@@ -32,11 +29,6 @@ TEXTS: dict[str, dict[str, object]] = {
             "november",
             "december",
         ],
-        "sources": {
-            SOURCE_LIVE: "live gemeten",
-            SOURCE_UNOBSERVED: "niet live waargenomen",
-            SOURCE_RECONSTRUCTED: "gereconstrueerd uit uurwaarden",
-        },
         "flags": {
             FLAG_INTERRUPTED: "meting kort onderbroken",
             FLAG_METER_RESET: "afgesloten door tellerreset",
@@ -75,7 +67,6 @@ TEXTS: dict[str, dict[str, object]] = {
             "Meterstand start (kWh)",
             "Meterstand eind (kWh)",
             "kWh",
-            "Herkomst",
             "Opmerking",
         ],
         "total": "Totaal",
@@ -89,7 +80,6 @@ TEXTS: dict[str, dict[str, object]] = {
             "meterstand_start_kwh",
             "meterstand_eind_kwh",
             "kwh",
-            "herkomst",
             "opmerking",
         ],
         "note_incomplete": (
@@ -107,15 +97,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "note_mismatch": (
             "Eindstand min beginstand ({by_readings:.2f} kWh) wijkt af van de som "
             "van de uurwaarden ({total:.2f} kWh)."
-        ),
-        "note_reconstructed": (
-            "{count} sessies zijn achteraf gereconstrueerd uit uurwaarden; "
-            "begin- en eindtijden zijn afgerond op hele uren."
-        ),
-        "note_unobserved": (
-            "{count} sessies zijn niet live waargenomen (Home Assistant of de sensor "
-            "was niet beschikbaar); de starttijd is het laatste moment waarop de "
-            "meter nog werd gevolgd."
         ),
         "note_difference": (
             "Controle: de som van de sessies ({sessions} kWh) wijkt {difference} kWh "
@@ -139,11 +120,6 @@ TEXTS: dict[str, dict[str, object]] = {
             "November",
             "December",
         ],
-        "sources": {
-            SOURCE_LIVE: "measured live",
-            SOURCE_UNOBSERVED: "not observed live",
-            SOURCE_RECONSTRUCTED: "reconstructed from hourly values",
-        },
         "flags": {
             FLAG_INTERRUPTED: "measurement briefly interrupted",
             FLAG_METER_RESET: "closed by meter reset",
@@ -182,7 +158,6 @@ TEXTS: dict[str, dict[str, object]] = {
             "Meter at start (kWh)",
             "Meter at end (kWh)",
             "kWh",
-            "Source",
             "Remark",
         ],
         "total": "Total",
@@ -196,7 +171,6 @@ TEXTS: dict[str, dict[str, object]] = {
             "meter_start_kwh",
             "meter_end_kwh",
             "kwh",
-            "source",
             "remark",
         ],
         "note_incomplete": (
@@ -216,15 +190,6 @@ TEXTS: dict[str, dict[str, object]] = {
         "note_mismatch": (
             "End reading minus start reading ({by_readings:.2f} kWh) differs from the "
             "sum of the hourly values ({total:.2f} kWh)."
-        ),
-        "note_reconstructed": (
-            "{count} sessions were reconstructed afterwards from hourly values; "
-            "start and end times are rounded to whole hours."
-        ),
-        "note_unobserved": (
-            "{count} sessions were not observed live (Home Assistant or the sensor "
-            "was unavailable); the start time is the last moment the meter was "
-            "still being followed."
         ),
         "note_difference": (
             "Check: the sum of the sessions ({sessions} kWh) differs by {difference} "
