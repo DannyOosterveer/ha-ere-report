@@ -1,4 +1,9 @@
+<img src="custom_components/ere_report/brand/icon@2x.png" alt="" width="96" align="right">
+
 # ERE-laadrapport voor Home Assistant
+
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Release](https://img.shields.io/github/v/release/DannyOosterveer/ha-ere-report)](https://github.com/DannyOosterveer/ha-ere-report/releases)
 
 Maakt per kwartaal een rapport van wat je laadpaal heeft geleverd, bedoeld als bewijsstuk bij het
 inboeken van ERE's (emissiereductie-eenheden) via een inboekdienstverlener.
@@ -29,14 +34,32 @@ integration is available in Dutch and English; the report language is a setting 
 
 ## Installatie
 
-1. Voeg deze repository in HACS toe als aangepaste repository (type: integratie) en installeer
-   "ERE Charging Report". Of kopieer `custom_components/ere_report` naar je `config/custom_components`.
-2. Herstart Home Assistant.
-3. Ga naar Instellingen → Apparaten & diensten → Integratie toevoegen → "ERE Charging Report".
-4. Kies de sensor met de meterstand van je laadpaal en vul de gegevens voor het rapport in.
-   De keuzelijst toont eerst alleen sensoren die op een laadpaalmeter lijken (van een bekende
-   laadpaal-integratie, of met "laadpaal", "charger", "wallbox", "socket" en dergelijke in de naam).
-   Staat jouw sensor er niet bij, vink dan "Alle energiesensoren tonen" aan.
+### 1. Downloaden via HACS
+
+[![Open deze repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DannyOosterveer&repository=ha-ere-report&category=integration)
+
+Klik op de knop. HACS opent deze repository in je eigen Home Assistant. Kies **Downloaden** en
+herstart Home Assistant.
+
+<details>
+<summary>Werkt de knop niet?</summary>
+
+Ga in HACS naar het menu (⋮) → **Aangepaste repositories**. Vul
+`https://github.com/DannyOosterveer/ha-ere-report` in, kies type **Integratie** en klik op
+**Toevoegen**. Zoek daarna "ERE Charging Report" en kies **Downloaden**.
+
+</details>
+
+### 2. Integratie toevoegen
+
+[![Voeg de integratie toe aan Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ere_report)
+
+Klik op de knop, of ga naar Instellingen → Apparaten & diensten → Integratie toevoegen →
+"ERE Charging Report".
+
+Kies daarna de sensor met de meterstand van je laadpaal en vul de gegevens voor het rapport in.
+De keuzelijst toont eerst alleen sensoren die op een laadpaalmeter lijken. Staat jouw sensor er
+niet bij, vink dan "Alle energiesensoren tonen" aan.
 
 De sensor moet `device_class: energy` hebben en langetermijnstatistieken opbouwen
 (`state_class: total_increasing`). Bij een Alfen met de Alfen Wallbox-integratie is dat
@@ -110,10 +133,3 @@ Via "Configureren" pas je de rapportgegevens aan en stel je de sessiedetectie af
   met een lange pauze wordt twee sessies.
 - Bidirectioneel laden wordt niet ondersteund; voor ERE telt alleen de netto geleverde kWh.
 - Eén meter per laadpunt. Voor een laadpaal met twee sockets voeg je de integratie twee keer toe.
-
-## Ontwikkelen
-
-```bash
-uv venv --python 3.13 && uv pip install pytest-homeassistant-custom-component home-assistant-frontend openpyxl ruff
-.venv/bin/python -m pytest
-```
