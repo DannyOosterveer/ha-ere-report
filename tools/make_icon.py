@@ -96,32 +96,34 @@ def draw(theme: dict[str, str]) -> Image.Image:
     d.rounded_rectangle((1120, 300, 1340, 900), radius=110, fill=body)
     d.rounded_rectangle((1150, 860, 1310, 1140), radius=60, fill=body)
 
-    # Leaf, top right, with a gap around it.
-    base, tip = (1540, 1010), (2020, 370)
+    # Leaf, partly behind the coin, with a gap around it.
+    base, tip = (1430, 1560), (2130, 640)
     gap = Image.new("L", (SIZE, SIZE), 0)
-    ImageDraw.Draw(gap).polygon(leaf_polygon(base, tip, 270), fill=255)
+    ImageDraw.Draw(gap).polygon(leaf_polygon(base, tip, 300), fill=255)
     img = knockout(img, gap)
     d = ImageDraw.Draw(img)
-    d.polygon(leaf_polygon(base, tip, 205), fill=GREEN)
-    vein_end = (
-        base[0] + (tip[0] - base[0]) * 0.78,
-        base[1] + (tip[1] - base[1]) * 0.78,
-    )
-    d.line((base, vein_end), fill=GREEN_VEIN, width=30)
-    d.line(((base[0] - 55, base[1] + 65), base), fill=GREEN, width=46)
+    d.polygon(leaf_polygon(base, tip, 240), fill=GREEN)
+    vein_end = (base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base[1]) * 0.8)
+    d.line((base, vein_end), fill=GREEN_VEIN, width=32)
 
-    # Coin, bottom right, with a gap so it reads on any background.
-    cx, cy, radius = 1800, 1720, 370
+    # Coin in front, with a gap so it reads on any background.
+    cx, cy, radius = 1690, 1700, 370
     gap = Image.new("L", (SIZE, SIZE), 0)
-    g = radius + 60
+    g = radius + 55
     ImageDraw.Draw(gap).ellipse((cx - g, cy - g, cx + g, cy + g), fill=255)
     img = knockout(img, gap)
-    d = ImageDraw.Draw(img)
-    d.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=GOLD_RIM)
-    face = radius - 52
-    d.ellipse((cx - face, cy - face, cx + face, cy + face), fill=GOLD_FACE)
-    font = ImageFont.truetype(EURO_FONT, 450)
-    d.text((cx, cy + 8), "€", font=font, fill=GOLD_MARK, anchor="mm")
+    coin = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    c = ImageDraw.Draw(coin)
+    c.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=GOLD_RIM)
+    face = radius - 54
+    c.ellipse((cx - face, cy - face, cx + face, cy + face), fill=GOLD_FACE)
+    # A slightly tilted euro sign makes the coin look tossed rather than placed.
+    mark = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    font = ImageFont.truetype(EURO_FONT, 460)
+    ImageDraw.Draw(mark).text((cx, cy + 8), "€", font=font, fill=GOLD_MARK, anchor="mm")
+    mark = mark.rotate(14, resample=Image.Resampling.BICUBIC, center=(cx, cy))
+    coin.alpha_composite(mark)
+    img.alpha_composite(coin)
     return img
 
 
