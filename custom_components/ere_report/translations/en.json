@@ -12,7 +12,7 @@
       },
       "details": {
         "title": "Report details",
-        "description": "Everything on this page is optional. Leave out what you do not know or do not want on the report, and click Submit. You can add it later via Configure. What Home Assistant already knows about your charger has been filled in.",
+        "description": "Everything on this page is optional. Adding the EAN code and serial number makes the report complete, but is not required to submit it to your ERE registration service. Leave out what you do not know or do not want on the report, and click Submit. You can add it later via Configure. What Home Assistant already knows about your charger has been filled in.",
         "data": {
           "holder_name": "Name of the applicant",
           "address": "Address of the charging location",
@@ -52,7 +52,7 @@
           "idle_minutes": "End a session after this long without consumption",
           "report_language": "Language of the report"
         },
-        "description": "Everything is optional. Empty fields are left off the report.",
+        "description": "Everything is optional. Empty fields are left off the report. Adding the EAN code and serial number makes the report complete, but is not required to submit it to your ERE registration service.",
         "data_description": {
           "ean": "Shown on your energy bill, or look it up by postcode and house number at eancodeboek.nl.",
           "charger_serial": "Shown on the charger's rating plate or in the manufacturer's app."

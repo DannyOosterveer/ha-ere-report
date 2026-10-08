@@ -63,7 +63,8 @@ tonen" aan.
 
 In de volgende stap kun je je naam, adres, EAN-code en de gegevens van je laadpaal invullen. Dat
 is allemaal optioneel: wat je leeg laat, komt niet op het rapport, en je kunt het later aanvullen
-via Configureren. Merk, type en serienummer worden overgenomen als Home Assistant ze van je
+via Configureren. Het vermelden van de EAN-code en het serienummer maakt het rapport volledig, maar
+is niet nodig om het in te dienen bij je inboekdienstverlener. Merk, type en serienummer worden overgenomen als Home Assistant ze van je
 laadpaal kent. De EAN-code staat op je energienota, of zoek hem op met postcode en huisnummer op
 [eancodeboek.nl](https://www.eancodeboek.nl).
 
