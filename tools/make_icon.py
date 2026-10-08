@@ -68,18 +68,35 @@ def u_curve(left_x, right_x, top_y, bottom_y, steps=60):
     return points
 
 
-def draw(theme: dict[str, str]) -> Image.Image:
-    img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    body, detail = theme["body"], theme["detail"]
+def draw_charger(d: ImageDraw.ImageDraw, theme: dict[str, str] | None, grow: int = 0):
+    """Draw the charger; with ``theme=None`` draw its silhouette, grown by ``grow``."""
+    g = grow
+    body = theme["body"] if theme else 255
 
     # Cable: from the plug down, round the bottom, up into the charger.
-    stamp_path(d, u_curve(760, 1230, 1100, 1830), 62, body)
+    stamp_path(d, u_curve(760, 1230, 1100, 1830), 62 + g, body)
 
-    # Wall box with screen, lightning bolt and a foot.
-    d.rounded_rectangle((330, 1290, 600, 1420), radius=40, fill=body)
-    d.rounded_rectangle((160, 120, 1060, 1340), radius=170, fill=body)
-    d.rounded_rectangle((360, 270, 860, 460), radius=50, fill=detail)
+    # Wall box with a foot, holster and plug.
+    d.rounded_rectangle(
+        (330 - g, 1290 - g, 600 + g, 1420 + g), radius=40 + g, fill=body
+    )
+    d.rounded_rectangle(
+        (160 - g, 120 - g, 1060 + g, 1340 + g), radius=170 + g, fill=body
+    )
+    d.rounded_rectangle(
+        (1000 - g, 330 - g, 1200 + g, 470 + g), radius=40 + g, fill=body
+    )
+    d.rounded_rectangle(
+        (1120 - g, 300 - g, 1340 + g, 900 + g), radius=110 + g, fill=body
+    )
+    d.rounded_rectangle(
+        (1150 - g, 860 - g, 1310 + g, 1140 + g), radius=60 + g, fill=body
+    )
+    if theme is None:
+        return
+
+    # Screen and lightning bolt.
+    d.rounded_rectangle((360, 270, 860, 460), radius=50, fill=theme["detail"])
     bolt = [
         (700, 560),
         (440, 960),
@@ -91,31 +108,34 @@ def draw(theme: dict[str, str]) -> Image.Image:
     ]
     d.polygon(bolt, fill=theme["bolt"])
 
-    # Holster and plug on the right side of the box.
-    d.rounded_rectangle((1000, 330, 1200, 470), radius=40, fill=body)
-    d.rounded_rectangle((1120, 300, 1340, 900), radius=110, fill=body)
-    d.rounded_rectangle((1150, 860, 1310, 1140), radius=60, fill=body)
 
-    # Large leaf with its lower part behind the coin.
-    base, tip = (1640, 1700), (2230, 720)
-    gap = Image.new("L", (SIZE, SIZE), 0)
-    ImageDraw.Draw(gap).polygon(leaf_polygon(base, tip, 400), fill=255)
-    img = knockout(img, gap)
+def draw(theme: dict[str, str]) -> Image.Image:
+    img = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    gap_width = 55
+
+    # Back: the leaf, partly hidden behind the plug and the coin.
+    base, tip = (1300, 1360), (1930, 380)
     d = ImageDraw.Draw(img)
-    d.polygon(leaf_polygon(base, tip, 330), fill=GREEN)
+    d.polygon(leaf_polygon(base, tip, 320), fill=GREEN)
     vein_end = (base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base[1]) * 0.8)
     d.line((base, vein_end), fill=GREEN_VEIN, width=32)
 
-    # Coin in front, with a gap so it reads on any background.
-    cx, cy, radius = 1640, 1720, 380
+    # Middle: the charger, with a gap cut into the leaf behind it.
     gap = Image.new("L", (SIZE, SIZE), 0)
-    g = radius + 55
+    draw_charger(ImageDraw.Draw(gap), None, gap_width)
+    img = knockout(img, gap)
+    draw_charger(ImageDraw.Draw(img), theme)
+
+    # Front: the coin over the cable loop and the corner of the box.
+    cx, cy, radius = 1360, 1600, 370
+    gap = Image.new("L", (SIZE, SIZE), 0)
+    g = radius + gap_width
     ImageDraw.Draw(gap).ellipse((cx - g, cy - g, cx + g, cy + g), fill=255)
     img = knockout(img, gap)
     coin = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     c = ImageDraw.Draw(coin)
     c.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=GOLD_RIM)
-    face = radius - 54
+    face = radius - 55
     c.ellipse((cx - face, cy - face, cx + face, cy + face), fill=GOLD_FACE)
     # A slightly tilted euro sign makes the coin look tossed rather than placed.
     mark = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
