@@ -14,12 +14,16 @@ const STRINGS = {
     charger: "Laadpunt",
     generated: "Aangemaakt",
     sessions: "Sessies",
-    files: "Downloaden",
+    files: "Bestanden",
     provisional: "voorlopig",
     none: "Nog geen rapporten. Kies een kwartaal en klik op Rapport maken.",
     noChargers: "Nog geen laadpunt ingesteld. Voeg de integratie ERE Charging Report toe.",
     loadError: "Kon de rapporten niet laden: {error}",
     lastReport: "Laatste rapport: {period}, {when}",
+    delete: "Verwijderen",
+    confirmDelete:
+      "Rapport {period} van {charger} verwijderen? Het xlsx- en csv-bestand worden definitief verwijderd.",
+    deleteFailed: "Verwijderen mislukt: {error}",
   },
   en: {
     title: "ERE reports",
@@ -34,12 +38,16 @@ const STRINGS = {
     charger: "Charge point",
     generated: "Created",
     sessions: "Sessions",
-    files: "Download",
+    files: "Files",
     provisional: "provisional",
     none: "No reports yet. Pick a quarter and click Create report.",
     noChargers: "No charge point set up yet. Add the ERE Charging Report integration.",
     loadError: "Could not load the reports: {error}",
     lastReport: "Last report: {period}, {when}",
+    delete: "Delete",
+    confirmDelete:
+      "Delete the {period} report for {charger}? The xlsx and csv files are deleted permanently.",
+    deleteFailed: "Could not delete: {error}",
   },
 };
 
@@ -173,11 +181,28 @@ class EreReportPanel extends HTMLElement {
     link.remove();
   }
 
+  async _delete(stem) {
+    const report = this._data.reports.find((r) => r.stem === stem);
+    const question = format(this._t.confirmDelete, {
+      period: `Q${report.quarter} ${report.year}`,
+      charger: report.charger,
+    });
+    if (!window.confirm(question)) return;
+    try {
+      await this._hass.callWS({ type: "ere_report/delete", stem });
+      this._deleteError = null;
+    } catch (err) {
+      this._deleteError = format(this._t.deleteFailed, { error: err.message || String(err) });
+    }
+    await this._load();
+  }
+
   _onClick(ev) {
     const target = ev.target.closest("[data-action]");
     if (!target) return;
     if (target.dataset.action === "generate") this._generate(target.dataset.entry);
     if (target.dataset.action === "download") this._download(target.dataset.file);
+    if (target.dataset.action === "delete") this._delete(target.dataset.stem);
   }
 
   _syncMenuButton() {
@@ -251,6 +276,7 @@ class EreReportPanel extends HTMLElement {
               `<button data-action="download" data-file="${escapeHtml(`${r.stem}.${ext}`)}">${ext}</button>`
           )
           .join(" ");
+        const remove = `<button class="delete" data-action="delete" data-stem="${escapeHtml(r.stem)}" title="${t.delete}" aria-label="${t.delete}">${t.delete}</button>`;
         return `
           <tr>
             <td class="period">Q${r.quarter} ${r.year}${provisional}</td>
@@ -258,7 +284,7 @@ class EreReportPanel extends HTMLElement {
             <td>${escapeHtml(this._date(r.generated))}</td>
             <td class="num" data-label="kWh">${this._number(r.total_kwh)}</td>
             <td class="num" data-label="${escapeHtml(t.sessions)}">${r.sessions ?? "–"}</td>
-            <td class="files">${buttons}</td>
+            <td class="files">${buttons} ${remove}</td>
           </tr>`;
       })
       .join("");
@@ -266,6 +292,7 @@ class EreReportPanel extends HTMLElement {
       <ha-card>
         <div class="card-content">
           <h2>${t.reports}</h2>
+          ${this._deleteError ? `<div class="result error">${escapeHtml(this._deleteError)}</div>` : ""}
           <div class="table">
             <table>
               <thead>
@@ -322,6 +349,7 @@ class EreReportPanel extends HTMLElement {
         th { color: var(--secondary-text-color); font-weight: 500; }
         .num { text-align: right; }
         .files button { padding: 4px 10px; }
+        .files button.delete { color: var(--error-color); border-color: transparent; background: none; }
         .tag { font-size: 12px; color: var(--secondary-text-color); }
         @media (max-width: 600px) {
           main { padding: 8px; gap: 8px; }
@@ -343,4 +371,7 @@ class EreReportPanel extends HTMLElement {
   }
 }
 
-customElements.define("ere-report-panel", EreReportPanel);
+// The module can load twice, e.g. after an update changes its URL.
+if (!customElements.get("ere-report-panel")) {
+  customElements.define("ere-report-panel", EreReportPanel);
+}

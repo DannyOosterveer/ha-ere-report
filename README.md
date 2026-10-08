@@ -73,8 +73,9 @@ adres en EAN-code. Om dezelfde reden kunnen alleen beheerders de rapporten zien 
 
 Je vindt de rapporten op drie plekken:
 
-- **ERE-rapporten** in de zijbalk: alle rapporten met downloadknoppen, en per laadpunt een knop om
-  een rapport voor een gekozen kwartaal te maken. De uitkomst of foutmelding verschijnt er direct onder.
+- **ERE-rapporten** in de zijbalk: alle rapporten met knoppen om ze te downloaden of te verwijderen,
+  en per laadpunt een knop om een rapport voor een gekozen kwartaal te maken. De uitkomst of
+  foutmelding verschijnt er direct onder. Een rapport opnieuw maken overschrijft het bestaande.
 - **Meldingen** (het belletje): na elk rapport een melding met downloadlinks. Als het automatische
   kwartaalrapport mislukt, staat ook dat hier.
 - **Logboek**: na elk rapport een regel als "heeft het rapport Q3 2026 gemaakt: 805,12 kWh,

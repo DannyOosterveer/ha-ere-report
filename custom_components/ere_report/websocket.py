@@ -25,6 +25,7 @@ REPORT_FILENAME = re.compile(REPORT_STEM.pattern + r"\.(?P<ext>xlsx|csv)")
 @callback
 def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_reports)
+    websocket_api.async_register_command(hass, ws_delete)
 
 
 def _scan(folder: Path) -> dict[str, dict[str, Any]]:
@@ -128,3 +129,44 @@ async def ws_reports(
         )
     reports.sort(key=lambda r: (r["year"], r["quarter"], r["charger"]), reverse=True)
     connection.send_result(msg["id"], {"chargers": chargers, "reports": reports})
+
+
+def _delete_files(folder: Path, stem: str) -> list[str]:
+    removed = []
+    for ext in ("xlsx", "csv"):
+        path = folder / f"{stem}.{ext}"
+        if path.is_file():
+            path.unlink()
+            removed.append(ext)
+    return removed
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): f"{DOMAIN}/delete", vol.Required("stem"): str}
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def ws_delete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Delete a report's xlsx and csv file."""
+    if not (match := REPORT_STEM.fullmatch(msg["stem"])):
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Invalid report name"
+        )
+        return
+    removed = await hass.async_add_executor_job(
+        _delete_files, Path(hass.config.path(REPORT_DIR)), msg["stem"]
+    )
+    if not removed:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "No such report")
+        return
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if (
+            entry.state is ConfigEntryState.LOADED
+            and slugify(entry.title) == match["slug"]
+        ):
+            entry.runtime_data.forget_report(int(match["year"]), int(match["quarter"]))
+    connection.send_result(msg["id"], {"removed": removed})

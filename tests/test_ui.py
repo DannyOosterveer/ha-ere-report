@@ -169,3 +169,41 @@ async def test_panel_fills_in_reports_from_older_versions(
     assert report["entry_id"] == entry.entry_id
     assert report["total_kwh"] == result["total_kwh"]
     assert report["sessions"] == result["sessions"]
+
+
+async def test_delete_report(
+    recorder_mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user,
+    report_files,
+) -> None:
+    hass.states.async_set(ENTITY, "1000.0", ATTRS)
+    entry = await setup_entry(hass)
+    year, quarter = previous_quarter(dt_util.now().date())
+    result = await entry.runtime_data.async_generate(year, quarter)
+    await hass.async_block_till_done()
+    assert hass.states.get(LAST_REPORT).state != "unknown"
+    stem = Path(result["xlsx_path"]).stem
+
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/delete", "stem": "../secrets"})
+    assert (await ws.receive_json())["error"]["code"] == "invalid_format"
+
+    await ws.send_json({"id": 2, "type": f"{DOMAIN}/delete", "stem": stem})
+    response = await ws.receive_json()
+    assert response["result"] == {"removed": ["xlsx", "csv"]}
+    await hass.async_block_till_done()
+    assert not Path(result["xlsx_path"]).exists()
+    assert not Path(result["csv_path"]).exists()
+    assert entry.runtime_data.reports == {}
+    assert hass.states.get(LAST_REPORT).state == "unknown"
+    notifications = persistent_notification._async_get_or_create_notifications(hass)
+    assert not [n for n in notifications if n.startswith(f"{DOMAIN}_")]
+
+    await ws.send_json({"id": 3, "type": f"{DOMAIN}/delete", "stem": stem})
+    assert (await ws.receive_json())["error"]["code"] == "not_found"
+
+    hass_admin_user.groups = []
+    await ws.send_json({"id": 4, "type": f"{DOMAIN}/delete", "stem": stem})
+    assert (await ws.receive_json())["error"]["code"] == "unauthorized"

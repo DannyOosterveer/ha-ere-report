@@ -413,6 +413,17 @@ class EreReportManager:
         )
 
     @callback
+    def forget_report(self, year: int, quarter: int) -> None:
+        """Drop a deleted report and its notification, whose links no longer work."""
+        stem = f"ere_{slugify(self.entry.title)}_{year}_q{quarter}"
+        self.reports.pop(stem, None)
+        persistent_notification.async_dismiss(
+            self.hass, f"{DOMAIN}_{self.entry.entry_id}_{year}q{quarter}"
+        )
+        self._store.async_delay_save(self._data_to_save, 0)
+        async_dispatcher_send(self.hass, self.signal)
+
+    @callback
     def _notify_failure(self, year: int, quarter: int, err: Exception) -> None:
         if self.dutch:
             title = "ERE-laadrapport mislukt"
