@@ -62,6 +62,7 @@ class ReportData:
     sessions: list[Session]
     month_meter_kwh: dict[int, float]
     language: str = DEFAULT_LANGUAGE
+    min_kwh: float = 0.05
     notes: list[str] = field(default_factory=list)
 
     @property
@@ -177,6 +178,7 @@ def build_report(
         sessions=sessions,
         month_meter_kwh=month_meter_kwh,
         language=language,
+        min_kwh=min_kwh,
     )
     data.notes = _notes(data, period, now, tz)
     return data
@@ -220,6 +222,14 @@ def _notes(
         notes.append(t["note_reconstructed"].format(count=counts[SOURCE_RECONSTRUCTED]))
     if counts[SOURCE_UNOBSERVED]:
         notes.append(t["note_unobserved"].format(count=counts[SOURCE_UNOBSERVED]))
+    if data.unallocated > 0:
+        decimal = "," if data.language == "nl" else "."
+        notes.append(
+            t["note_unallocated"].format(
+                kwh=f"{data.unallocated:.2f}".replace(".", decimal),
+                min=f"{data.min_kwh:.2f}".replace(".", decimal),
+            )
+        )
     return notes
 
 
@@ -286,7 +296,6 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 (t["brand"], meta.charger_brand),
                 (t["model"], meta.charger_model),
                 (t["serial"], meta.charger_serial),
-                (t["source_entity"], meta.energy_entity),
             ],
         ),
         (
@@ -297,7 +306,11 @@ def write_xlsx(data: ReportData, path: Path, tz: tzinfo, version: str) -> None:
                 (t["delivered"], data.meter_total),
                 (t["session_count"], len(data.sessions)),
                 (t["sessions_total"], data.sessions_total),
-                (t["unallocated"], data.unallocated),
+                *(
+                    [(t["unallocated"], data.unallocated)]
+                    if data.unallocated > 0
+                    else []
+                ),
             ],
         ),
     ]

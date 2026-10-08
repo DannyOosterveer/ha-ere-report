@@ -53,7 +53,8 @@ def reconstruct_sessions(rows: list[HourRow], threshold_kwh: float) -> list[Sess
     """
     clusters: list[list[HourRow]] = []
     for row in sorted(rows, key=lambda r: r.start):
-        if row.change < threshold_kwh:
+        # Round to the meter's resolution: 0.05 can arrive as 0.04999...
+        if round(row.change, 3) < threshold_kwh:
             continue
         if clusters:
             empty_hours = (row.start - clusters[-1][-1].start) / HOUR - 1

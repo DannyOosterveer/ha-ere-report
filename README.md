@@ -19,8 +19,7 @@ integration is available in Dutch and English; the report language is a setting 
   verificateur dat accepteren, bepalen zij. Vraag het na voordat je erop rekent.
 - **Kies de sensor van de MID-meter in je laadpaal.** Voor particulieren eist de NEa een
   MID-gecertificeerde meter die in de laadpaal is geïntegreerd; zonder die meter kun je geen ERE's
-  aanvragen. De integratie kan niet controleren welke meter een sensor uitleest. Het rapport noemt
-  daarom de gebruikte sensor, zodat je inboeker dat kan nagaan.
+  aanvragen. De integratie kan niet controleren welke meter een sensor uitleest.
 
 ## Wat het doet
 

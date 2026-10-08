@@ -89,6 +89,7 @@ def test_report_totals_and_reconstruction() -> None:
     assert data.sessions_total == 21.0
     assert data.unallocated == 0.02
     assert any("gereconstrueerd" in note for note in data.notes)
+    assert any(note.startswith("0,02 kWh is geleverd buiten") for note in data.notes)
     assert not any("geen meetgegevens" in note for note in data.notes)
 
 
@@ -171,6 +172,8 @@ def test_write_files(tmp_path: Path) -> None:
     assert summary["Geleverd in periode (kWh)"] == 21.0
     assert summary["Aantal laadsessies"] == 2
     assert not any("MID" in str(label) for label in summary)
+    assert "Meetbron in Home Assistant" not in summary
+    assert "Buiten sessies geleverd (kWh)" not in summary
     sessions = list(workbook["Sessies"].iter_rows(values_only=True))
     assert sessions[1][2] == datetime(2026, 7, 1, 9, 0)
     assert sessions[1][7] == 10.0
@@ -208,3 +211,11 @@ def test_english_report(tmp_path: Path) -> None:
     assert sessions[1][8] == "reconstructed from hourly values"
     with xlsx.with_suffix(".csv").open(encoding="utf-8") as handle:
         assert handle.readline().startswith("charge_point,serial_number,ean,")
+
+
+def test_threshold_includes_exact_boundary() -> None:
+    start = datetime(2026, 7, 4, 10, tzinfo=UTC)
+    # 0.05 as it can come out of the statistics: 0.049999999999272404.
+    rows = hourly(start, [3.0, 0, 22677.71 - 22677.66], meter=100.0)
+    [session] = reconstruct_sessions(rows, 0.05)
+    assert session.kwh == 3.05

@@ -59,13 +59,12 @@ TEXTS: dict[str, dict[str, object]] = {
         "brand": "Merk",
         "model": "Type",
         "serial": "Serienummer",
-        "source_entity": "Meetbron in Home Assistant",
         "meter_begin": "Meterstand begin periode (kWh)",
         "meter_end": "Meterstand eind periode (kWh)",
         "delivered": "Geleverd in periode (kWh)",
         "session_count": "Aantal laadsessies",
         "sessions_total": "Som laadsessies (kWh)",
-        "unallocated": "Niet aan een sessie toegewezen (kWh)",
+        "unallocated": "Buiten sessies geleverd (kWh)",
         "footer": (
             "Aangemaakt op {generated} door Home Assistant (ERE-laadrapport {version})."
         ),
@@ -120,6 +119,11 @@ TEXTS: dict[str, dict[str, object]] = {
             "was niet beschikbaar); de starttijd is het laatste moment waarop de "
             "meter nog werd gevolgd."
         ),
+        "note_unallocated": (
+            "{kwh} kWh is geleverd buiten een laadsessie: losse kleine afnames van "
+            "minder dan {min} kWh, bijvoorbeeld als de auto na het laden nog even "
+            "stroom vraagt. Deze kWh tellen mee in het geleverde totaal."
+        ),
     },
     "en": {
         "days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -164,13 +168,12 @@ TEXTS: dict[str, dict[str, object]] = {
         "brand": "Brand",
         "model": "Model",
         "serial": "Serial number",
-        "source_entity": "Data source in Home Assistant",
         "meter_begin": "Meter reading at start of period (kWh)",
         "meter_end": "Meter reading at end of period (kWh)",
         "delivered": "Delivered in period (kWh)",
         "session_count": "Number of charging sessions",
         "sessions_total": "Sum of charging sessions (kWh)",
-        "unallocated": "Not assigned to a session (kWh)",
+        "unallocated": "Delivered outside sessions (kWh)",
         "footer": (
             "Created on {generated} by Home Assistant (ERE charging report {version})."
         ),
@@ -226,6 +229,11 @@ TEXTS: dict[str, dict[str, object]] = {
             "{count} sessions were not observed live (Home Assistant or the sensor "
             "was unavailable); the start time is the last moment the meter was "
             "still being followed."
+        ),
+        "note_unallocated": (
+            "{kwh} kWh was delivered outside a charging session: small separate "
+            "draws below {min} kWh, for example when the car briefly draws power "
+            "after charging. These kWh are included in the delivered total."
         ),
     },
 }
