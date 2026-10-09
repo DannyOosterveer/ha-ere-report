@@ -21,11 +21,13 @@
           "charger_brand": "Charger brand",
           "charger_model": "Charger model",
           "charger_serial": "Charger serial number",
-          "report_language": "Language of the report"
+          "report_language": "Language of the report",
+          "push_targets": "Push notification to"
         },
         "data_description": {
           "ean": "Shown on your energy bill, or look it up by postcode and house number at eancodeboek.nl.",
-          "charger_serial": "Shown on the charger's rating plate or in the manufacturer's app."
+          "charger_serial": "Shown on the charger's rating plate or in the manufacturer's app.",
+          "push_targets": "These phones get a notification when the quarterly report has been created automatically. Tap it to download. Only administrators' phones are listed, because only they can open the reports."
         }
       }
     },
@@ -50,12 +52,14 @@
           "charger_model": "Charger model",
           "charger_serial": "Charger serial number",
           "idle_minutes": "End a session after this long without consumption",
-          "report_language": "Language of the report"
+          "report_language": "Language of the report",
+          "push_targets": "Push notification to"
         },
         "description": "Everything is optional. Empty fields are left off the report. Adding the EAN code and serial number makes the report complete, but is not required to submit it to your ERE registration service.",
         "data_description": {
           "ean": "Shown on your energy bill, or look it up by postcode and house number at eancodeboek.nl.",
-          "charger_serial": "Shown on the charger's rating plate or in the manufacturer's app."
+          "charger_serial": "Shown on the charger's rating plate or in the manufacturer's app.",
+          "push_targets": "These phones get a notification when the quarterly report has been created automatically. Tap it to download. Only administrators' phones are listed, because only they can open the reports."
         }
       }
     },

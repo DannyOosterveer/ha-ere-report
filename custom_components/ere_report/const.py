@@ -17,8 +17,12 @@ CONF_CHARGER_MODEL = "charger_model"
 CONF_CHARGER_SERIAL = "charger_serial"
 CONF_IDLE_MINUTES = "idle_minutes"
 CONF_REPORT_LANGUAGE = "report_language"
+CONF_PUSH_TARGETS = "push_targets"
 
 DEFAULT_IDLE_MINUTES = 15
+# The automatic report is made at this local time on the first day of a quarter,
+# so its push notification does not arrive in the middle of the night.
+DAILY_CHECK_HOUR = 9
 
 STORAGE_VERSION = 1
 REPORT_DIR = "ere_reports"

@@ -52,7 +52,9 @@ from .const import (
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
     CONF_POSTCODE_CITY,
+    CONF_PUSH_TARGETS,
     CONF_REPORT_LANGUAGE,
+    DAILY_CHECK_HOUR,
     DEFAULT_IDLE_MINUTES,
     DOMAIN,
     EVENT_REPORT_GENERATED,
@@ -62,6 +64,7 @@ from .const import (
     STORAGE_VERSION,
 )
 from .history import HourRow, previous_quarter, quarter_bounds, quarter_of
+from .phones import NOTIFY, async_admin_phones
 from .report import ReportData, ReportMeta, build_report, write_csv, write_xlsx
 from .report_text import DEFAULT_LANGUAGE
 from .session_tracker import Session, SessionTracker
@@ -172,7 +175,11 @@ class EreReportManager:
             ),
             async_track_time_interval(self.hass, self._handle_tick, TICK_INTERVAL),
             async_track_time_change(
-                self.hass, self._handle_daily, hour=0, minute=30, second=0
+                self.hass,
+                self._handle_daily,
+                hour=DAILY_CHECK_HOUR,
+                minute=0,
+                second=0,
             ),
             async_call_later(self.hass, STARTUP_CHECK_DELAY, self._handle_daily),
         ]
@@ -249,14 +256,72 @@ class EreReportManager:
             self._last_auto_report = key
         elif self._last_auto_report != key:
             try:
-                await self.async_generate(year, quarter)
+                result = await self.async_generate(year, quarter)
             except HomeAssistantError as err:
                 self._notify_failure(year, quarter, err)
+                await self._async_push_failure(year, quarter)
                 return
             self._last_auto_report = key
+            await self._async_push_report(result)
         else:
             return
         self._store.async_delay_save(self._data_to_save, 0)
+
+    async def _async_push(self, title: str, message: str) -> None:
+        """Send a push notification that opens the reports page when tapped."""
+        if CONF_PUSH_TARGETS in self.entry.options:
+            targets = list(self.entry.options[CONF_PUSH_TARGETS])
+        else:
+            targets = list(await async_admin_phones(self.hass))
+        link = f"/{PANEL_URL}"
+        for service in targets:
+            if not self.hass.services.has_service(NOTIFY, service):
+                _LOGGER.warning("Push notification target notify.%s not found", service)
+                continue
+            try:
+                await self.hass.services.async_call(
+                    NOTIFY,
+                    service,
+                    {
+                        "title": title,
+                        "message": message,
+                        # iOS opens "url", Android opens "clickAction".
+                        "data": {"url": link, "clickAction": link},
+                    },
+                    blocking=True,
+                )
+            except HomeAssistantError:
+                _LOGGER.exception("Could not send a push notification to %s", service)
+
+    async def _async_push_report(self, result: dict[str, Any]) -> None:
+        period = f"Q{result['quarter']} {result['year']}"
+        kwh = f"{result['total_kwh']:.2f}"
+        if self.dutch:
+            await self._async_push(
+                f"ERE-laadrapport {period}",
+                f"{self.charger_name}: {kwh.replace('.', ',')} kWh in "
+                f"{result['sessions']} sessies. Tik om te downloaden.",
+            )
+        else:
+            await self._async_push(
+                f"ERE charging report {period}",
+                f"{self.charger_name}: {kwh} kWh in {result['sessions']} sessions. "
+                "Tap to download.",
+            )
+
+    async def _async_push_failure(self, year: int, quarter: int) -> None:
+        if self.dutch:
+            await self._async_push(
+                "ERE-laadrapport mislukt",
+                f"Het rapport Q{quarter} {year} voor {self.charger_name} kon niet "
+                "worden gemaakt. Tik voor details.",
+            )
+        else:
+            await self._async_push(
+                "ERE charging report failed",
+                f"The Q{quarter} {year} report for {self.charger_name} could not be "
+                "created. Tap for details.",
+            )
 
     async def _async_fetch_rows(self, start: datetime, end: datetime) -> list[HourRow]:
         result = await get_instance(self.hass).async_add_executor_job(

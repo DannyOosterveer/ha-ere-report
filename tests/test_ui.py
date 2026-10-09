@@ -244,3 +244,42 @@ async def test_reports_follow_the_device_name(
     assert report["charger"] == "Alfen Eve"
     for path in (new["xlsx_path"], new["csv_path"]):
         Path(path).unlink()
+
+
+async def test_failed_automatic_report_is_pushed(
+    recorder_mock, hass: HomeAssistant, hass_admin_user, report_files
+) -> None:
+    from .test_init import add_phone
+
+    pushes = add_phone(hass, "Admin Phone", hass_admin_user.id)
+    hass.states.async_set(ENTITY, "1000.0", ATTRS)
+    entry = await setup_entry(hass)
+    manager = entry.runtime_data
+    manager._last_auto_report = "2000Q1"
+    with patch(
+        "custom_components.ere_report.manager.write_xlsx",
+        side_effect=PermissionError("read-only file system"),
+    ):
+        await manager._handle_daily(dt_util.utcnow())
+    [push] = pushes
+    assert push.data["title"] == "ERE charging report failed"
+    assert push.data["data"]["url"] == "/ere-report"
+
+
+async def test_no_push_when_all_phones_are_unticked(
+    recorder_mock, hass: HomeAssistant, hass_admin_user, report_files
+) -> None:
+    from .test_init import add_phone
+
+    pushes = add_phone(hass, "Admin Phone", hass_admin_user.id)
+    hass.states.async_set(ENTITY, "1000.0", ATTRS)
+    entry = await setup_entry(hass)
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "push_targets": []}
+    )
+    await hass.async_block_till_done()
+    manager = entry.runtime_data
+    manager._last_auto_report = "2000Q1"
+    await manager._handle_daily(dt_util.utcnow())
+    assert manager.last_report is not None
+    assert pushes == []

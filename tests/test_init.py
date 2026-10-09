@@ -8,11 +8,12 @@ from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_import_statistics
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from openpyxl import load_workbook
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_mock_service,
 )
 from pytest_homeassistant_custom_component.components.recorder.common import (
     async_wait_recording_done,
@@ -213,12 +214,27 @@ async def test_generate_report(
     Path(response["csv_path"]).unlink()
 
 
+def add_phone(hass: HomeAssistant, name: str, user_id: str) -> list:
+    """Register a Home Assistant app phone and capture its push notifications."""
+    MockConfigEntry(
+        domain="mobile_app",
+        data={"device_name": name, "user_id": user_id, "webhook_id": name},
+    ).add_to_hass(hass)
+    return async_mock_service(hass, "notify", f"mobile_app_{slugify(name)}")
+
+
 async def test_automatic_report_on_quarter_change(
-    recorder_mock, hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    recorder_mock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_admin_user,
+    hass_read_only_user,
 ) -> None:
     # Timers only fire for moments after the real clock, so use future dates.
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2035-09-30 12:00:00+00:00")
+    admin_pushes = add_phone(hass, "Admin Phone", hass_admin_user.id)
+    other_pushes = add_phone(hass, "Other Phone", hass_read_only_user.id)
     hass.states.async_set(ENTITY, "1000.0", ATTRS)
     entry = await setup_entry(hass)
     events = []
@@ -230,17 +246,42 @@ async def test_automatic_report_on_quarter_change(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     # The first check after installation only notes which quarter was last.
-    await move_to("2035-09-30 22:31:00+00:00")
+    await move_to("2035-10-01 07:01:00+00:00")  # 09:01 in Amsterdam
     assert events == []
     assert entry.runtime_data._last_auto_report == "2035Q3"
 
-    await move_to("2035-10-01 22:31:00+00:00")
+    await move_to("2035-10-02 07:01:00+00:00")
     assert events == []
 
+    # The daily check runs every morning; on the last day of the quarter too.
+    await move_to("2035-12-31 08:01:00+00:00")
+    assert events == []
+
+    # Just after midnight on the first day nothing happens yet: the report
+    # waits until 09:00, so its push does not arrive at night.
     await move_to("2035-12-31 23:31:00+00:00")
+    assert events == []
+
+    await move_to("2036-01-01 08:01:00+00:00")  # 09:01 in Amsterdam
     assert len(events) == 1
     assert (events[0].data["year"], events[0].data["quarter"]) == (2035, 4)
     assert entry.runtime_data._last_auto_report == "2035Q4"
 
-    for name in ("xlsx_path", "csv_path"):
-        Path(events[0].data[name]).unlink()
+    # Only administrators get a push: only they can open the reports page.
+    [push] = admin_pushes
+    assert push.data["title"] == "ERE charging report Q4 2035"
+    assert push.data["message"] == (
+        "Laadpaal: 0.00 kWh in 0 sessions. Tap to download."
+    )
+    assert push.data["data"] == {"url": "/ere-report", "clickAction": "/ere-report"}
+    assert other_pushes == []
+
+    # A report made by hand sends no push.
+    await entry.runtime_data.async_generate(2035, 3)
+    assert len(admin_pushes) == 1
+
+    for event in events:
+        for name in ("xlsx_path", "csv_path"):
+            Path(event.data[name]).unlink(missing_ok=True)
+    for path in Path(hass.config.path("ere_reports")).glob("ere_laadpaal_2035_*"):
+        path.unlink()

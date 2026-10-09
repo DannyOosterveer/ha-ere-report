@@ -34,10 +34,12 @@ from .const import (
     CONF_HOLDER_NAME,
     CONF_IDLE_MINUTES,
     CONF_POSTCODE_CITY,
+    CONF_PUSH_TARGETS,
     CONF_REPORT_LANGUAGE,
     DEFAULT_IDLE_MINUTES,
     DOMAIN,
 )
+from .phones import async_admin_phones
 from .report_text import DEFAULT_LANGUAGE, LANGUAGES
 
 TEXT_FIELDS = (
@@ -138,7 +140,9 @@ def _device_details(hass: HomeAssistant, entity_id: str) -> dict[str, str]:
     return {key: value for key, value in found.items() if value}
 
 
-def _details_schema(defaults: dict[str, Any], with_tuning: bool) -> vol.Schema:
+def _details_schema(
+    defaults: dict[str, Any], with_tuning: bool, phones: dict[str, str]
+) -> vol.Schema:
     schema: dict[Any, Any] = {
         vol.Optional(
             field, description={"suggested_value": defaults.get(field, "")}
@@ -157,6 +161,21 @@ def _details_schema(defaults: dict[str, Any], with_tuning: bool) -> vol.Schema:
             mode=selector.SelectSelectorMode.DROPDOWN,
         )
     )
+    if phones:
+        # Until the user saves a choice, every administrator's phone is used.
+        chosen = defaults.get(CONF_PUSH_TARGETS, list(phones))
+        schema[
+            vol.Optional(CONF_PUSH_TARGETS, default=[p for p in chosen if p in phones])
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    selector.SelectOptionDict(value=service, label=name)
+                    for service, name in phones.items()
+                ],
+                multiple=True,
+                mode=selector.SelectSelectorMode.LIST,
+            )
+        )
     if with_tuning:
         schema[
             vol.Required(
@@ -244,7 +263,9 @@ class EreReportConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="details",
-            data_schema=_details_schema(defaults, with_tuning=False),
+            data_schema=_details_schema(
+                defaults, with_tuning=False, phones=await async_admin_phones(self.hass)
+            ),
             errors=errors,
         )
 
@@ -273,6 +294,8 @@ class EreReportOptionsFlow(OptionsFlow):
             user_input = {**device, **saved}
         return self.async_show_form(
             step_id="init",
-            data_schema=_details_schema(user_input, with_tuning=True),
+            data_schema=_details_schema(
+                user_input, with_tuning=True, phones=await async_admin_phones(self.hass)
+            ),
             errors=errors,
         )

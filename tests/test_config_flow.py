@@ -196,3 +196,34 @@ async def test_details_are_prefilled_from_the_charger(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"][CONF_EAN] == ""
+
+
+async def test_push_targets_list_admin_phones(
+    recorder_mock, hass: HomeAssistant, hass_admin_user, hass_read_only_user
+) -> None:
+    from .test_init import add_phone
+
+    add_phone(hass, "Admin Phone", hass_admin_user.id)
+    add_phone(hass, "Other Phone", hass_read_only_user.id)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Laadpaal",
+        unique_id=ENTITY,
+        data={CONF_ENERGY_ENTITY: ENTITY},
+        options={CONF_HOLDER_NAME: "J. Jansen"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    key = next(k for k in result["data_schema"].schema if str(k) == "push_targets")
+    options = result["data_schema"].schema[key].config["options"]
+    assert [o["value"] for o in options] == ["mobile_app_admin_phone"]
+    assert key.default() == ["mobile_app_admin_phone"]
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_HOLDER_NAME: "J. Jansen", "push_targets": []}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["push_targets"] == []

@@ -21,11 +21,13 @@
           "charger_brand": "Merk laadpaal",
           "charger_model": "Type laadpaal",
           "charger_serial": "Serienummer laadpaal",
-          "report_language": "Taal van het rapport"
+          "report_language": "Taal van het rapport",
+          "push_targets": "Pushmelding naar"
         },
         "data_description": {
           "ean": "Staat op je energienota, of zoek hem op met postcode en huisnummer op eancodeboek.nl.",
-          "charger_serial": "Staat op het typeplaatje van de laadpaal of in de app van de fabrikant."
+          "charger_serial": "Staat op het typeplaatje van de laadpaal of in de app van de fabrikant.",
+          "push_targets": "Je krijgt een melding op deze telefoons als het kwartaalrapport automatisch is gemaakt. Tik erop om het te downloaden. Alleen telefoons van beheerders staan in de lijst, omdat alleen zij de rapporten kunnen openen."
         }
       }
     },
@@ -50,12 +52,14 @@
           "charger_model": "Type laadpaal",
           "charger_serial": "Serienummer laadpaal",
           "idle_minutes": "Sessie beëindigen na zo lang zonder verbruik",
-          "report_language": "Taal van het rapport"
+          "report_language": "Taal van het rapport",
+          "push_targets": "Pushmelding naar"
         },
         "description": "Alles is optioneel. Lege velden komen niet op het rapport. Het vermelden van de EAN-code en het serienummer maakt het rapport volledig, maar is niet nodig om het in te dienen bij je inboekdienstverlener.",
         "data_description": {
           "ean": "Staat op je energienota, of zoek hem op met postcode en huisnummer op eancodeboek.nl.",
-          "charger_serial": "Staat op het typeplaatje van de laadpaal of in de app van de fabrikant."
+          "charger_serial": "Staat op het typeplaatje van de laadpaal of in de app van de fabrikant.",
+          "push_targets": "Je krijgt een melding op deze telefoons als het kwartaalrapport automatisch is gemaakt. Tik erop om het te downloaden. Alleen telefoons van beheerders staan in de lijst, omdat alleen zij de rapporten kunnen openen."
         }
       }
     },

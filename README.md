@@ -25,7 +25,8 @@ integration is available in Dutch and English; the report language is a setting 
 ## Wat het doet
 
 - Volgt een oplopende kWh-sensor en legt elke laadsessie vast met tijd en meterstand bij start en stop.
-- Maakt op de eerste dag van een nieuw kwartaal automatisch een rapport over het vorige kwartaal.
+- Maakt op de eerste dag van een nieuw kwartaal om 09:00 automatisch een rapport over het vorige
+  kwartaal, en stuurt een pushmelding naar je telefoon. Tik erop en je kunt het rapport downloaden.
 - Het rapport opent met de meterstand aan het begin en eind van het kwartaal; dat verschil is het
   getal dat je inboekt. De sessies zijn de onderbouwing.
 - Elke afgenomen kWh komt in een sessie terecht, ook een korte start die de slimme aansturing
@@ -128,6 +129,9 @@ Via "Configureren" pas je de rapportgegevens aan en stel je de sessiedetectie af
   tussendoor lang pauzeert, bijvoorbeeld bij laden op zonnestroom.
 - **Taal van het rapport**: Nederlands (standaard) of Engels. De bediening in Home Assistant volgt
   de taal van je Home Assistant.
+- **Pushmelding naar**: de telefoons die een melding krijgen als het kwartaalrapport automatisch is
+  gemaakt (of als dat mislukt). Standaard alle telefoons van beheerders met de Home Assistant-app;
+  alleen beheerders kunnen de rapporten openen. Vink alles uit als je geen meldingen wilt.
 
 ## Beperkingen
 
