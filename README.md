@@ -69,6 +69,9 @@ is niet nodig om het in te dienen bij je inboekdienstverlener. Merk, type en ser
 laadpaal kent. De EAN-code staat op je energienota, of zoek hem op met postcode en huisnummer op
 [eancodeboek.nl](https://www.eancodeboek.nl).
 
+De naam van het laadpunt op het rapport is de naam van het apparaat in Home Assistant. Hernoem je
+het apparaat, dan krijgt het volgende rapport de nieuwe naam.
+
 De sensor moet `device_class: energy` hebben en langetermijnstatistieken opbouwen
 (`state_class: total_increasing`). Bij een Alfen met de Alfen Wallbox-integratie is dat
 "Meter Reading" van de socket.

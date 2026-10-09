@@ -207,3 +207,40 @@ async def test_delete_report(
     hass_admin_user.groups = []
     await ws.send_json({"id": 4, "type": f"{DOMAIN}/delete", "stem": stem})
     assert (await ws.receive_json())["error"]["code"] == "unauthorized"
+
+
+async def test_reports_follow_the_device_name(
+    recorder_mock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    report_files,
+) -> None:
+    """Renaming the device renames the report; the old file of that quarter goes."""
+    from homeassistant.helpers import device_registry as dr
+
+    hass.states.async_set(ENTITY, "1000.0", ATTRS)
+    entry = await setup_entry(hass)
+    manager = entry.runtime_data
+    year, quarter = previous_quarter(dt_util.now().date())
+    old = await manager.async_generate(year, quarter)
+    assert Path(old["xlsx_path"]).name == f"ere_laadpaal_{year}_q{quarter}.xlsx"
+
+    registry = dr.async_get(hass)
+    device = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    registry.async_update_device(device.id, name_by_user="Alfen Eve")
+    assert manager.charger_name == "Alfen Eve"
+
+    new = await manager.async_generate(year, quarter)
+    assert new["charger"] == "Alfen Eve"
+    assert Path(new["xlsx_path"]).name == f"ere_alfen_eve_{year}_q{quarter}.xlsx"
+    assert not Path(old["xlsx_path"]).exists()
+    assert not Path(old["csv_path"]).exists()
+
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/reports"})
+    result = (await ws.receive_json())["result"]
+    assert result["chargers"][0]["title"] == "Alfen Eve"
+    [report] = result["reports"]
+    assert report["charger"] == "Alfen Eve"
+    for path in (new["xlsx_path"], new["csv_path"]):
+        Path(path).unlink()

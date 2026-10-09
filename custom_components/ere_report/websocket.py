@@ -97,10 +97,12 @@ async def ws_reports(
         if entry.state is not ConfigEntryState.LOADED:
             continue
         manager = entry.runtime_data
-        chargers.append({"entry_id": entry.entry_id, "title": entry.title})
-        by_slug[slugify(entry.title)] = (entry.entry_id, entry.title)
+        name = manager.charger_name
+        chargers.append({"entry_id": entry.entry_id, "title": name})
+        for known_name in (entry.title, name):
+            by_slug[slugify(known_name)] = (entry.entry_id, name)
         for stem, report in manager.reports.items():
-            known[stem] = (entry.entry_id, entry.title, report)
+            known[stem] = (entry.entry_id, name, report)
 
     reports = []
     for stem, item in found.items():
@@ -164,9 +166,10 @@ async def ws_delete(
         connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "No such report")
         return
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            entry.state is ConfigEntryState.LOADED
-            and slugify(entry.title) == match["slug"]
+        if entry.state is ConfigEntryState.LOADED and entry.runtime_data.owns_stem(
+            msg["stem"]
         ):
-            entry.runtime_data.forget_report(int(match["year"]), int(match["quarter"]))
+            entry.runtime_data.forget_report(
+                msg["stem"], int(match["year"]), int(match["quarter"])
+            )
     connection.send_result(msg["id"], {"removed": removed})

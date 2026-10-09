@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
+import re
 from typing import Any
 
 from homeassistant.components import persistent_notification
@@ -28,7 +29,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_call_later,
@@ -106,6 +107,26 @@ class EreReportManager:
     @property
     def last_session(self) -> Session | None:
         return self.sessions[-1] if self.sessions else None
+
+    @property
+    def charger_name(self) -> str:
+        """The name the user sees: the device name if they renamed the device."""
+        device = dr.async_get(self.hass).async_get_device(
+            identifiers={(DOMAIN, self.entry.entry_id)}
+        )
+        if device and device.name_by_user:
+            return device.name_by_user
+        return self.entry.title
+
+    def stem(self, year: int, quarter: int) -> str:
+        return f"ere_{slugify(self.charger_name)}_{year}_q{quarter}"
+
+    def owns_stem(self, stem: str) -> bool:
+        """Whether a report file belongs to this charge point, old names included."""
+        names = {self.charger_name, self.entry.title}
+        return stem in self.reports or any(
+            re.fullmatch(rf"ere_{slugify(name)}_\d{{4}}_q[1-4]", stem) for name in names
+        )
 
     @property
     def last_report(self) -> dict[str, Any] | None:
@@ -278,7 +299,7 @@ class EreReportManager:
     def _meta(self) -> ReportMeta:
         options = self.entry.options
         return ReportMeta(
-            charger_name=self.entry.title,
+            charger_name=self.charger_name,
             energy_entity=self.energy_entity,
             holder_name=options.get(CONF_HOLDER_NAME, ""),
             address=options.get(CONF_ADDRESS, ""),
@@ -318,7 +339,7 @@ class EreReportManager:
         failure in the UI instead of only in the log.
         """
         tz = dt_util.get_default_time_zone()
-        stem = f"ere_{slugify(self.entry.title)}_{year}_q{quarter}"
+        stem = self.stem(year, quarter)
         folder = Path(self.hass.config.path(REPORT_DIR))
         xlsx_path = folder / f"{stem}.xlsx"
         csv_path = folder / f"{stem}.csv"
@@ -345,7 +366,7 @@ class EreReportManager:
 
         result = {
             "config_entry_id": self.entry.entry_id,
-            "charger": self.entry.title,
+            "charger": self.charger_name,
             "year": year,
             "quarter": quarter,
             "complete": data.complete,
@@ -358,6 +379,7 @@ class EreReportManager:
             "csv_path": str(csv_path),
             "notes": data.notes,
         }
+        await self._async_remove_renamed(stem, year, quarter)
         self.reports.pop(stem, None)
         self.reports[stem] = {
             "stem": stem,
@@ -404,7 +426,7 @@ class EreReportManager:
         persistent_notification.async_create(
             self.hass,
             (
-                f"**{self.entry.title} — Q{quarter} {year}**: {summary}\n\n"
+                f"**{self.charger_name} — Q{quarter} {year}**: {summary}\n\n"
                 f"[Download xlsx]({links['xlsx']}) · [Download csv]({links['csv']})"
                 f" · [{all_reports}](/{PANEL_URL})"
             ),
@@ -412,10 +434,35 @@ class EreReportManager:
             notification_id=f"{DOMAIN}_{self.entry.entry_id}_{year}q{quarter}",
         )
 
+    async def _async_remove_renamed(self, stem: str, year: int, quarter: int) -> None:
+        """Remove this quarter's report saved under a previous charge point name.
+
+        Making a report again replaces the old one; after a rename the file
+        name differs, so the old files would otherwise linger as a duplicate.
+        """
+        suffix = f"_{year}_q{quarter}"
+        old_stems = {
+            old for old in self.reports if old.endswith(suffix) and old != stem
+        }
+        title_stem = f"ere_{slugify(self.entry.title)}{suffix}"
+        if title_stem != stem:
+            old_stems.add(title_stem)
+        if not old_stems:
+            return
+        folder = Path(self.hass.config.path(REPORT_DIR))
+
+        def _remove() -> None:
+            for old in old_stems:
+                for ext in ("xlsx", "csv"):
+                    (folder / f"{old}.{ext}").unlink(missing_ok=True)
+
+        await self.hass.async_add_executor_job(_remove)
+        for old in old_stems:
+            self.reports.pop(old, None)
+
     @callback
-    def forget_report(self, year: int, quarter: int) -> None:
+    def forget_report(self, stem: str, year: int, quarter: int) -> None:
         """Drop a deleted report and its notification, whose links no longer work."""
-        stem = f"ere_{slugify(self.entry.title)}_{year}_q{quarter}"
         self.reports.pop(stem, None)
         persistent_notification.async_dismiss(
             self.hass, f"{DOMAIN}_{self.entry.entry_id}_{year}q{quarter}"
@@ -428,14 +475,14 @@ class EreReportManager:
         if self.dutch:
             title = "ERE-laadrapport mislukt"
             message = (
-                f"Het rapport voor **{self.entry.title} — Q{quarter} {year}** kon niet "
-                f"automatisch worden gemaakt.\n\n{err}\n\nProbeer het opnieuw via "
+                f"Het rapport voor **{self.charger_name} — Q{quarter} {year}** kon "
+                f"niet automatisch worden gemaakt.\n\n{err}\n\nProbeer het opnieuw via "
                 f"[ERE-rapporten](/{PANEL_URL}); details staan in het logboek."
             )
         else:
             title = "ERE charging report failed"
             message = (
-                f"The report for **{self.entry.title} — Q{quarter} {year}** could not "
+                f"The report for **{self.charger_name} — Q{quarter} {year}** could not "
                 f"be created automatically.\n\n{err}\n\nTry again from "
                 f"[ERE reports](/{PANEL_URL}); details are in the log."
             )
