@@ -44,6 +44,7 @@ from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import (
     CONF_ADDRESS,
+    CONF_AUTO_REPORT,
     CONF_CHARGER_BRAND,
     CONF_CHARGER_MODEL,
     CONF_CHARGER_SERIAL,
@@ -251,10 +252,16 @@ class EreReportManager:
         await self._async_refresh_quarter_begin()
         year, quarter = previous_quarter(dt_util.now().date())
         key = f"{year}Q{quarter}"
-        if self._last_auto_report is None:
-            # First run after installation: wait for the next quarter change.
+        if self._last_auto_report == key:
+            return
+        if self._last_auto_report is None or not self.entry.options.get(
+            CONF_AUTO_REPORT, True
+        ):
+            # First run after installation, or automatic reports are switched
+            # off: only note the quarter, so switching on later does not
+            # report a quarter that has long passed.
             self._last_auto_report = key
-        elif self._last_auto_report != key:
+        else:
             try:
                 result = await self.async_generate(year, quarter)
             except HomeAssistantError as err:
@@ -263,8 +270,6 @@ class EreReportManager:
                 return
             self._last_auto_report = key
             await self._async_push_report(result)
-        else:
-            return
         self._store.async_delay_save(self._data_to_save, 0)
 
     async def _async_push(self, title: str, message: str) -> None:

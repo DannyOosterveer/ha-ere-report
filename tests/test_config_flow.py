@@ -89,6 +89,7 @@ async def test_options_flow(recorder_mock, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_IDLE_MINUTES] == 30
+    assert entry.options["auto_report"] is True
     assert entry.runtime_data.tracker.idle_timeout.total_seconds() == 1800
 
 

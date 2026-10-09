@@ -53,13 +53,15 @@
           "charger_serial": "Charger serial number",
           "idle_minutes": "End a session after this long without consumption",
           "report_language": "Language of the report",
-          "push_targets": "Push notification to"
+          "push_targets": "Push notification to",
+          "auto_report": "Automatic report every quarter"
         },
         "description": "Everything is optional. Empty fields are left off the report. Adding the EAN code and serial number makes the report complete, but is not required to submit it to your ERE registration service.",
         "data_description": {
           "ean": "Shown on your energy bill, or look it up by postcode and house number at eancodeboek.nl.",
           "charger_serial": "Shown on the charger's rating plate or in the manufacturer's app.",
-          "push_targets": "These phones get a notification when the quarterly report has been created automatically. Tap it to download. Only administrators' phones are listed, because only they can open the reports."
+          "push_targets": "These phones get a notification when the quarterly report has been created automatically. Tap it to download. Only administrators' phones are listed, because only they can open the reports.",
+          "auto_report": "Creates the report for the previous quarter at 09:00 on the first day of a new quarter, with a push notification and a notification in Home Assistant."
         }
       }
     },

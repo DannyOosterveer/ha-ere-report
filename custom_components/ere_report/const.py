@@ -18,6 +18,7 @@ CONF_CHARGER_SERIAL = "charger_serial"
 CONF_IDLE_MINUTES = "idle_minutes"
 CONF_REPORT_LANGUAGE = "report_language"
 CONF_PUSH_TARGETS = "push_targets"
+CONF_AUTO_REPORT = "auto_report"
 
 DEFAULT_IDLE_MINUTES = 15
 # The automatic report is made at this local time on the first day of a quarter,

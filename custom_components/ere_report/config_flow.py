@@ -26,6 +26,7 @@ import voluptuous as vol
 
 from .const import (
     CONF_ADDRESS,
+    CONF_AUTO_REPORT,
     CONF_CHARGER_BRAND,
     CONF_CHARGER_MODEL,
     CONF_CHARGER_SERIAL,
@@ -161,6 +162,10 @@ def _details_schema(
             mode=selector.SelectSelectorMode.DROPDOWN,
         )
     )
+    if with_tuning:
+        schema[
+            vol.Required(CONF_AUTO_REPORT, default=defaults.get(CONF_AUTO_REPORT, True))
+        ] = selector.BooleanSelector()
     if phones:
         # Until the user saves a choice, every administrator's phone is used.
         chosen = defaults.get(CONF_PUSH_TARGETS, list(phones))

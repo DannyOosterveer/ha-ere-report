@@ -25,8 +25,8 @@ integration is available in Dutch and English; the report language is a setting 
 ## Wat het doet
 
 - Volgt een oplopende kWh-sensor en legt elke laadsessie vast met tijd en meterstand bij start en stop.
-- Maakt op de eerste dag van een nieuw kwartaal om 09:00 automatisch een rapport over het vorige
-  kwartaal, en stuurt een pushmelding naar je telefoon. Tik erop en je kunt het rapport downloaden.
+- Maakt elk kwartaal automatisch het rapport en stuurt je een pushmelding; zie
+  [Automatisch elk kwartaal](#automatisch-elk-kwartaal).
 - Het rapport opent met de meterstand aan het begin en eind van het kwartaal; dat verschil is het
   getal dat je inboekt. De sessies zijn de onderbouwing.
 - Elke afgenomen kWh komt in een sessie terecht, ook een korte start die de slimme aansturing
@@ -99,6 +99,23 @@ Je vindt de rapporten op drie plekken:
 | Sessies | Per sessie: start, eind, duur, meterstand start en eind, kWh, opmerking |
 | Maandtotalen | Per maand: aantal sessies en kWh, geteld in de maand waarin een sessie begint |
 
+## Automatisch elk kwartaal
+
+Op de eerste dag van een nieuw kwartaal om 09:00 maakt de integratie vanzelf het rapport over het
+vorige kwartaal. Je krijgt dan:
+
+- een pushmelding op je telefoon via de Home Assistant-app; tik erop om het rapport te downloaden;
+- een melding onder het belletje in Home Assistant, met downloadlinks;
+- een regel in het logboek.
+
+Mislukt het rapport, dan krijg je daar op dezelfde manier een melding van.
+
+Dit staat standaard aan. Uitzetten kan via Configureren → **Automatisch rapport elk kwartaal**.
+Bij **Pushmelding naar** kies je welke telefoons de melding krijgen.
+
+Het eerste automatische rapport komt aan het begin van het eerste nieuwe kwartaal na de
+installatie. Een rapport over een eerder kwartaal maak je zelf, zie hieronder.
+
 ## Een rapport maken
 
 - Knop "Rapport maken" op de pagina ERE-rapporten, voor elk kwartaal.
@@ -129,6 +146,8 @@ Via "Configureren" pas je de rapportgegevens aan en stel je de sessiedetectie af
   tussendoor lang pauzeert, bijvoorbeeld bij laden op zonnestroom.
 - **Taal van het rapport**: Nederlands (standaard) of Engels. De bediening in Home Assistant volgt
   de taal van je Home Assistant.
+- **Automatisch rapport elk kwartaal** (standaard aan): zie
+  [Automatisch elk kwartaal](#automatisch-elk-kwartaal).
 - **Pushmelding naar**: de telefoons die een melding krijgen als het kwartaalrapport automatisch is
   gemaakt (of als dat mislukt). Standaard alle telefoons van beheerders met de Home Assistant-app;
   alleen beheerders kunnen de rapporten openen. Vink alles uit als je geen meldingen wilt.

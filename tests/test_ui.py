@@ -283,3 +283,25 @@ async def test_no_push_when_all_phones_are_unticked(
     await manager._handle_daily(dt_util.utcnow())
     assert manager.last_report is not None
     assert pushes == []
+
+
+async def test_automatic_report_can_be_switched_off(
+    recorder_mock, hass: HomeAssistant, hass_admin_user, report_files
+) -> None:
+    from .test_init import add_phone
+
+    pushes = add_phone(hass, "Admin Phone", hass_admin_user.id)
+    hass.states.async_set(ENTITY, "1000.0", ATTRS)
+    entry = await setup_entry(hass)
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, "auto_report": False}
+    )
+    await hass.async_block_till_done()
+    manager = entry.runtime_data
+    manager._last_auto_report = "2000Q1"
+    await manager._handle_daily(dt_util.utcnow())
+    assert manager.last_report is None
+    assert pushes == []
+    # The quarter is noted, so switching on later does not report it after all.
+    year, quarter = previous_quarter(dt_util.now().date())
+    assert manager._last_auto_report == f"{year}Q{quarter}"
