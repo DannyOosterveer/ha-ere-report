@@ -56,7 +56,8 @@ TEXTS: dict[str, dict[str, object]] = {
         "delivered": "Geleverd in periode (kWh)",
         "session_count": "Aantal laadsessies",
         "footer": (
-            "Aangemaakt op {generated} door Home Assistant (ERE-laadrapport {version})."
+            "Aangemaakt op {generated} door Home Assistant "
+            "(ERE Charging Report {version})."
         ),
         "session_headers": [
             "Nr",
@@ -147,7 +148,7 @@ TEXTS: dict[str, dict[str, object]] = {
         "delivered": "Delivered in period (kWh)",
         "session_count": "Number of charging sessions",
         "footer": (
-            "Created on {generated} by Home Assistant (ERE charging report {version})."
+            "Created on {generated} by Home Assistant (ERE Charging Report {version})."
         ),
         "session_headers": [
             "No",

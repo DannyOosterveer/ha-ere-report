@@ -1,12 +1,13 @@
 <img src="custom_components/ere_report/brand/icon@2x.png" alt="" width="96" align="right">
 
-# ERE-laadrapport voor Home Assistant
+# ERE Charging Report voor Home Assistant
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
 [![Release](https://img.shields.io/github/v/release/DannyOosterveer/ha-ere-report)](https://github.com/DannyOosterveer/ha-ere-report/releases)
 
-Maakt per kwartaal een rapport van wat je laadpaal heeft geleverd, bedoeld als bewijsstuk bij het
-inboeken van ERE's (emissiereductie-eenheden) via een inboekdienstverlener.
+Home Assistant-integratie die per kwartaal een rapport maakt van wat je laadpaal heeft geleverd,
+bedoeld als bewijsstuk bij het inboeken van ERE's (emissiereductie-eenheden) via een
+inboekdienstverlener.
 
 Nieuw met ERE's? In het [stappenplan van De Groene Nerds](https://degroenenerds.nl/artikel/stappenplan-zo-verdien-jij-tot-honderden-euros-met-thuisladen-door-ere-certificaten/)
 lees je wat ERE's zijn, wat je ermee kunt verdienen en hoe je de vergoeding krijgt.
